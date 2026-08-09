@@ -307,6 +307,56 @@ input[type=text]:focus{outline:none; border-color:var(--accent)}
 }
 
 .footnote{color:var(--ink-3); font-size:13px; text-align:center; padding:28px 0 8px}
+.footnote a{color:var(--ink-3)}
+
+/* ---------- Watch-Simulation ---------- */
+.watchsim{display:flex; gap:28px; align-items:center; flex-wrap:wrap; margin-top:16px}
+.watch{display:flex; flex-direction:column; align-items:center; flex:none; margin:0 auto}
+.watch-band{width:88px; height:44px; background:color-mix(in srgb, var(--accent) 75%, #1a1a1a)}
+.watch-band.top{border-radius:14px 14px 6px 6px}
+.watch-band.bottom{border-radius:6px 6px 14px 14px}
+.watch-body{
+  width:170px; height:204px; background:#101013; border-radius:42px; padding:11px;
+  position:relative; box-shadow:0 10px 30px rgba(0,0,0,.35), inset 0 0 0 2px #2c2c30;
+}
+.watch-screen{
+  width:100%; height:100%; border-radius:32px; background:#000; color:#fff;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding:12px 10px; gap:7px; overflow:hidden;
+}
+.watch-crown{position:absolute; right:-7px; top:46px; width:9px; height:34px; border-radius:5px; background:#3a3a40}
+.watch-side{position:absolute; right:-6px; top:96px; width:7px; height:50px; border-radius:4px; background:#28282c}
+.ws-time{font-size:36px; font-weight:700; letter-spacing:-.02em; line-height:1}
+.ws-big{font-size:17px; font-weight:650; line-height:1.3}
+.ws-line{font-size:13px; color:#b9c4bf; line-height:1.35}
+.ws-tag{font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#7fb8a8}
+.ws-btn{
+  border:none; border-radius:999px; padding:11px 16px; font-size:15px; font-weight:650;
+  background:#2F6B5F; color:#fff; width:92%;
+}
+.ws-btn.big{padding:16px 12px; font-size:16px}
+.ws-btn.quiet{background:#1d1d21; color:#b9c4bf}
+.ws-arrow{font-size:44px; line-height:1}
+.ws-controls{flex:1; min-width:230px}
+.ws-controls .btn{margin:0 6px 8px 0}
+.ws-controls .btn.active{background:var(--accent); border-color:var(--accent); color:#fff}
+
+/* ---------- Feedback ---------- */
+.fb-q{margin-top:16px}
+.fb-q .q{font-weight:600; margin-bottom:8px}
+.fb-opts{display:flex; gap:8px; flex-wrap:wrap}
+.fb-opt{
+  border:1.5px solid var(--line); background:var(--card); color:var(--ink);
+  padding:8px 14px; border-radius:999px; font-size:14px; font-weight:550;
+}
+.fb-opt:hover{border-color:var(--accent)}
+.fb-opt.selected{border-color:var(--accent); background:var(--accent-soft); color:var(--accent)}
+textarea{
+  width:100%; min-height:84px; padding:12px 14px; border-radius:12px; font-size:15px;
+  border:1.5px solid var(--line); background:var(--card); color:var(--ink);
+  font-family:inherit; resize:vertical;
+}
+textarea:focus{outline:none; border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -349,7 +399,8 @@ input[type=text]:focus{outline:none; border-color:var(--accent)}
         <p class="small muted">Wissen, Hilfe vor Ort und ein Belastungs-Check für Angehörige – als gleichwertiger Teil des Produkts.</p>
       </div>
     </div>
-    <p class="footnote">Demonstrationsversion mit Beispieldaten. Keine echten Personen, keine echte Ortung.</p>
+    <p class="footnote">Demonstrationsversion mit Beispieldaten. Keine echten Personen, keine echte Ortung.<br>
+    <a href="pitch.html">Für Investoren</a> &nbsp;·&nbsp; <a href="cockpit.html">Für Pflegeeinrichtungen</a></p>
   </div>
 </main>
 
@@ -512,6 +563,30 @@ input[type=text]:focus{outline:none; border-color:var(--accent)}
 
     </div>
 
+    <!-- Watch-Simulation -->
+    <div class="card" id="card-watchsim">
+      <h3>So sieht es auf der Uhr aus</h3>
+      <p class="sub">Die Seite Ihres Angehörigen: bewusst groß, ruhig und mit höchstens einem Knopf. Klicken Sie sich durch die Situationen.</p>
+      <div class="watchsim">
+        <div class="watch">
+          <div class="watch-band top"></div>
+          <div class="watch-body">
+            <div class="watch-screen" id="ws-screen"></div>
+            <div class="watch-crown"></div>
+            <div class="watch-side"></div>
+          </div>
+          <div class="watch-band bottom"></div>
+        </div>
+        <div class="ws-controls">
+          <button class="btn sm" data-ws="start">Startbildschirm</button>
+          <button class="btn sm" data-ws="termin">Terminerinnerung</button>
+          <button class="btn sm" data-ws="heimweg">„Bring mich nach Hause“</button>
+          <button class="btn sm" data-ws="still">Stufe 3: stille Begleitung</button>
+          <p class="small muted" id="ws-note" style="margin-top:10px"></p>
+        </div>
+      </div>
+    </div>
+
     <!-- Module -->
     <div class="card">
       <div class="spread">
@@ -555,11 +630,54 @@ input[type=text]:focus{outline:none; border-color:var(--accent)}
       <div id="event-list" style="margin-top:8px"></div>
     </div>
 
+    <!-- Feedback -->
+    <div class="card" id="card-feedback">
+      <h3>Ihre Meinung zählt</h3>
+      <p class="sub">Drei kurze Fragen – Ihre Antworten helfen, MERIDIAN besser zu machen.</p>
+
+      <div class="fb-q" data-fbq="verstaendlich">
+        <div class="q">War alles verständlich, was Sie hier gesehen haben?</div>
+        <div class="fb-opts">
+          <button class="fb-opt">Ja, alles klar</button>
+          <button class="fb-opt">Das meiste</button>
+          <button class="fb-opt">Vieles war unklar</button>
+        </div>
+      </div>
+
+      <div class="fb-q" data-fbq="nutzen">
+        <div class="q">Würde Ihnen so ein System im Alltag helfen?</div>
+        <div class="fb-opts">
+          <button class="fb-opt">Ja, sehr</button>
+          <button class="fb-opt">Vielleicht</button>
+          <button class="fb-opt">Eher nicht</button>
+        </div>
+      </div>
+
+      <div class="fb-q" data-fbq="preis">
+        <div class="q">Was wäre Ihnen das im Monat wert?</div>
+        <div class="fb-opts">
+          <button class="fb-opt">Nichts</button>
+          <button class="fb-opt">Bis 15 €</button>
+          <button class="fb-opt">15–40 €</button>
+          <button class="fb-opt">Mehr als 40 €</button>
+        </div>
+      </div>
+
+      <div class="fb-q">
+        <div class="q">Was fehlt Ihnen? Was würden Sie anders machen?</div>
+        <textarea id="fb-text" placeholder="Ihre Gedanken – jede Zeile hilft."></textarea>
+      </div>
+
+      <button class="btn primary" id="btn-fb-send" style="margin-top:14px">Antworten senden</button>
+      <p class="tiny muted" style="margin-top:8px">Öffnet Ihr E-Mail-Programm mit den Antworten – Sie sehen vor dem Absenden alles.</p>
+    </div>
+
   </div>
 
   <p class="footnote">
     MERIDIAN unterstützt – es ersetzt keine Aufsicht und stellt keine Diagnosen.<br>
-    Prototyp mit Beispieldaten, Stand August 2026.
+    Prototyp mit Beispieldaten, Stand August 2026.<br>
+    <a href="pitch.html">Für Investoren</a> &nbsp;·&nbsp; <a href="cockpit.html">Für Pflegeeinrichtungen</a>
   </p>
 </main>
 
@@ -1481,6 +1599,109 @@ $("#btn-rec-dismiss").onclick = () => {
 };
 
 $$("[data-sim]").forEach(b => b.onclick = () => simuliere(b.dataset.sim));
+
+/* ============================================================
+   TEIL 9 – Watch-Simulation
+   Zeigt die Uhr-Seite des Systems: groß, ruhig, ein Knopf.
+   ============================================================ */
+
+const WATCH_SZENEN = {
+  start: {
+    note: "Der Ruhezustand: Uhrzeit, Wochentag und der nächste Termin. Keine Menüs, nichts zum Verirren.",
+    html: function(){
+      return '<div class="ws-time">10:12</div>' +
+             '<div class="ws-line">Samstag, 9. August<br>Vormittag</div>' +
+             '<div class="ws-tag">Nächster Termin</div>' +
+             '<div class="ws-line">15:00 · Kaffee mit Lena</div>';
+    }
+  },
+  termin: {
+    note: "Eine Erinnerung: sanfter Ton, Vibration, ein großer Knopf. Wird er nicht gedrückt, greift die Eskalationskette – erst dann werden Sie informiert.",
+    html: function(){
+      return '<div class="ws-tag">Erinnerung</div>' +
+             '<div class="ws-big">Frau Dr. Berger<br>10:30 Uhr</div>' +
+             '<div class="ws-line">Zeit loszugehen</div>' +
+             '<button class="ws-btn" onclick="watchQuittiert()">Verstanden ✓</button>';
+    }
+  },
+  terminOk: {
+    note: "Nach der Bestätigung ist Ruhe – und in Ihrem Dashboard erscheint ein grüner Haken.",
+    html: function(){
+      return '<div style="font-size:40px">✓</div>' +
+             '<div class="ws-big">Gut!</div>' +
+             '<div class="ws-line">Der Termin ist bestätigt.<br>Ihre Familie sieht das.</div>';
+    }
+  },
+  heimweg: {
+    note: "Der wichtigste Knopf in Stufe 2: ein Druck startet die Heimführung – und informiert gleichzeitig Sie.",
+    html: function(){
+      return '<div class="ws-tag">Alles gut</div>' +
+             '<div class="ws-line">Wenn Sie nicht mehr genau wissen, wo Sie sind:</div>' +
+             '<button class="ws-btn big" onclick="watchHeimweg()">🏠 Bring mich<br>nach Hause</button>';
+    }
+  },
+  heimwegLauf: {
+    note: "Die Uhr führt Schritt für Schritt mit großen Pfeilen. Parallel wurde die Familie benachrichtigt.",
+    html: function(){
+      return '<div class="ws-arrow">⬆</div>' +
+             '<div class="ws-big">Immer geradeaus</div>' +
+             '<div class="ws-line">Noch 400 Meter<br>Lena wurde informiert</div>';
+    }
+  },
+  still: {
+    note: "Stufe 3: Die Uhr verlangt nichts mehr. Bei einem Alarm bleibt sie still oder spricht mit vertrauter Stimme – alle Meldungen laufen nur noch bei Ihnen auf.",
+    html: function(){
+      return '<div style="font-size:30px">🕊️</div>' +
+             '<div class="ws-line" style="font-size:14px">„Bleib einfach stehen,<br>wo du bist.<br>Anna ist unterwegs zu dir.“</div>' +
+             '<div class="ws-tag" style="margin-top:4px">Vertraute Stimme · Lena</div>';
+    }
+  }
+};
+
+function zeigeWatch(szene){
+  const s = WATCH_SZENEN[szene]; if(!s) return;
+  $("#ws-screen").innerHTML = s.html();
+  $("#ws-note").textContent = s.note;
+  $$("[data-ws]").forEach(b => b.classList.toggle("active",
+    b.dataset.ws === szene ||
+    (b.dataset.ws === "termin" && szene === "terminOk") ||
+    (b.dataset.ws === "heimweg" && szene === "heimwegLauf")));
+}
+function watchQuittiert(){
+  zeigeWatch("terminOk");
+  ereignis("Terminerinnerung auf der Uhr bestätigt.", "info");
+}
+function watchHeimweg(){
+  zeigeWatch("heimwegLauf");
+  ereignis("„Bring mich nach Hause“ gedrückt – Heimführung läuft, Familie informiert.", "warn");
+}
+$$("[data-ws]").forEach(b => b.onclick = () => zeigeWatch(b.dataset.ws));
+zeigeWatch("start");
+
+/* ============================================================
+   TEIL 10 – Feedback (öffnet E-Mail mit den Antworten)
+   ============================================================ */
+
+const fbAntworten = {};
+$$(".fb-q[data-fbq]").forEach(q => {
+  q.querySelectorAll(".fb-opt").forEach(btn => {
+    btn.onclick = () => {
+      q.querySelectorAll(".fb-opt").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      fbAntworten[q.dataset.fbq] = btn.textContent;
+    };
+  });
+});
+
+$("#btn-fb-send").onclick = () => {
+  const body =
+    "Mein Feedback zum MERIDIAN-Prototyp:%0D%0A%0D%0A" +
+    "Verstaendlich: " + (fbAntworten.verstaendlich || "-") + "%0D%0A" +
+    "Wuerde helfen: " + (fbAntworten.nutzen || "-") + "%0D%0A" +
+    "Wert pro Monat: " + (fbAntworten.preis || "-") + "%0D%0A%0D%0A" +
+    "Anmerkungen:%0D%0A" + encodeURIComponent($("#fb-text").value || "-");
+  window.location.href = "mailto:kgw85@icloud.com?subject=Feedback%20MERIDIAN-Prototyp&body=" + body;
+};
 
 $("#emergency").addEventListener("click", e => {
   if(e.target.id === "emergency") $("#emergency").classList.add("hidden");

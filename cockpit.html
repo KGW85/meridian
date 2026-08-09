@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MERIDIAN – Stationscockpit (Vorschau)</title>
+<style>
+:root{
+  --bg:#F6F4F0; --card:#FFFFFF; --line:#E5E0D7; --line-soft:#EFEBE3;
+  --ink:#2B2925; --ink-2:#5F5850; --ink-3:#8B8377;
+  --accent:#2F6B5F; --accent-soft:#E7F0ED;
+  --ok:#3B8A6B; --ok-soft:#E6F2EC;
+  --warn:#B5801F; --warn-soft:#FBF1DC;
+  --alarm:#BB4438; --alarm-soft:#FBE9E6;
+  --radius:16px;
+  --shadow:0 1px 2px rgba(43,41,37,.05), 0 8px 24px rgba(43,41,37,.06);
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#171614; --card:#211F1C; --line:#332F2A; --line-soft:#2A2724;
+    --ink:#F0EDE7; --ink-2:#BDB6AC; --ink-3:#8E877D;
+    --accent:#6FB3A2; --accent-soft:#20302C;
+    --ok:#6FB392; --ok-soft:#1D2E27;
+    --warn:#D8A94A; --warn-soft:#302718;
+    --alarm:#E0776A; --alarm-soft:#331E1B;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+  }
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font); font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased; padding-bottom:40px}
+.wrap{max-width:1100px; margin:0 auto; padding:0 20px}
+h1,h2,h3{margin:0; font-weight:650; letter-spacing:-.01em}
+h1{font-size:26px} h3{font-size:16px}
+p{margin:0}
+a{color:var(--accent)}
+.card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px}
+.chip{display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:650; background:var(--accent-soft); color:var(--accent)}
+.chip.ok{background:var(--ok-soft); color:var(--ok)}
+.chip.warn{background:var(--warn-soft); color:var(--warn)}
+.chip.alarm{background:var(--alarm-soft); color:var(--alarm)}
+.btn{border:1px solid var(--line); background:var(--card); color:var(--ink); padding:9px 15px; border-radius:999px; font-weight:550; cursor:pointer; font-family:inherit; font-size:14px}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+header.top{border-bottom:1px solid var(--line); padding:13px 0; background:var(--card)}
+header.top .wrap{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.logo{display:flex; align-items:center; gap:10px; font-weight:700}
+.logo .mark{width:28px; height:28px; border-radius:8px; background:var(--accent); color:#fff; display:grid; place-items:center; font-size:14px}
+.banner{background:var(--warn-soft); color:var(--warn); font-size:13px; font-weight:600; text-align:center; padding:8px 16px}
+.grid{display:grid; gap:14px; grid-template-columns:repeat(4,1fr); margin-top:16px}
+@media (max-width:980px){ .grid{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:560px){ .grid{grid-template-columns:1fr} }
+.resident{cursor:default}
+.resident.alarm{border-color:var(--alarm); background:var(--alarm-soft)}
+.resident.warn{border-color:var(--warn)}
+.resident .head{display:flex; align-items:center; gap:10px; margin-bottom:10px}
+.avatar{width:38px; height:38px; border-radius:50%; background:var(--accent-soft); color:var(--accent); display:grid; place-items:center; font-weight:700; font-size:15px; flex:none}
+.kv{display:flex; justify-content:space-between; font-size:13px; padding:5px 0; border-bottom:1px solid var(--line-soft)}
+.kv:last-child{border-bottom:none}
+.kv .k{color:var(--ink-3)}
+.kv .v{font-weight:600}
+.cols{display:grid; gap:14px; grid-template-columns:2fr 1fr; margin-top:20px}
+@media (max-width:860px){ .cols{grid-template-columns:1fr} }
+.note{padding:11px 0; border-bottom:1px solid var(--line-soft); font-size:14px}
+.note:last-child{border-bottom:none}
+.note .meta{font-size:12px; color:var(--ink-3); margin-top:2px}
+input[type=text]{width:100%; padding:11px 14px; border-radius:11px; font-size:14px; border:1.5px solid var(--line); background:var(--card); color:var(--ink); font-family:inherit}
+input[type=text]:focus{outline:none; border-color:var(--accent)}
+.toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--bg); padding:11px 18px; border-radius:999px; font-size:14px; z-index:90; box-shadow:var(--shadow); max-width:90vw; text-align:center}
+.footnote{color:var(--ink-3); font-size:13px; text-align:center; padding:30px 0 0}
+</style>
+</head>
+<body>
+
+<div class="banner">Konzept-Vorschau für Pflegeeinrichtungen · Demo-Daten, keine echten Personen</div>
+
+<header class="top">
+  <div class="wrap">
+    <div class="logo"><span class="mark">M</span> MERIDIAN <span class="chip" style="margin-left:6px">Stationscockpit</span></div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap">
+      <button class="btn" id="btn-export">Dokumentation exportieren</button>
+      <a class="btn" href="index.html" style="text-decoration:none">Zur Familien-Demo</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div style="display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-top:22px; flex-wrap:wrap">
+    <div>
+      <h1>Wohnbereich 2 · Frühdienst</h1>
+      <p class="small" style="color:var(--ink-2); font-size:14px">8 Bewohner:innen · 1 offener Alarm · Übergabe um 13:30 Uhr</p>
+    </div>
+    <span class="chip alarm" id="alarm-chip">1 Alarm offen</span>
+  </div>
+
+  <div class="grid" id="residents"></div>
+
+  <div class="cols">
+    <div class="card">
+      <h3>Übergabe-Notizen</h3>
+      <p style="color:var(--ink-3); font-size:13px">Was die nächste Schicht wissen muss – einmal getippt, für alle sichtbar.</p>
+      <div id="notes" style="margin-top:8px"></div>
+      <div style="display:flex; gap:8px; margin-top:12px">
+        <input type="text" id="note-input" placeholder="Neue Notiz für die Übergabe …">
+        <button class="btn primary" id="btn-note">Hinzufügen</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Was das Cockpit den Familien gibt</h3>
+      <p style="font-size:14px; color:var(--ink-2); margin-top:8px">
+        Jede Familie sieht ihr eigenes MERIDIAN-Dashboard – Fotos vom Tag, bestätigte Medikamente,
+        beantwortete Fragen. Weniger Anrufe auf Station, mehr Vertrauen.
+      </p>
+      <p style="font-size:14px; color:var(--ink-2); margin-top:10px">
+        <strong>Preismodell:</strong> pro Bewohner:in und Monat, inklusive Angehörigen-Zugängen.
+      </p>
+      <a href="mailto:kgw85@icloud.com?subject=MERIDIAN%20f%C3%BCr%20Einrichtungen" style="font-size:14px; display:inline-block; margin-top:10px">Interesse? Kontakt aufnehmen →</a>
+    </div>
+  </div>
+
+  <p class="footnote">
+    MERIDIAN unterstützt die Pflege – es ersetzt keine Aufsicht und stellt keine Diagnosen.<br>
+    <a href="index.html">Familien-Demo</a> &nbsp;·&nbsp; <a href="pitch.html">Für Investoren</a>
+  </p>
+</div>
+
+<script>
+const BEWOHNER = [
+  { name:"Anna M.",    zimmer:"201", status:"alarm", chip:"Bereich verlassen", info:[["Zuletzt","Garten, vor 4 Min."],["Uhr","wird getragen"],["Stufe","3"]] },
+  { name:"Werner K.",  zimmer:"202", status:"warn",  chip:"Medikament offen",  info:[["18:00 Marcumar","nicht bestätigt"],["Uhr","78 %"],["Stufe","2"]] },
+  { name:"Gisela R.",  zimmer:"203", status:"ok",    chip:"Alles in Ordnung",  info:[["Aktivität","normal"],["Uhr","wird getragen"],["Stufe","2"]] },
+  { name:"Heinz B.",   zimmer:"204", status:"ok",    chip:"Alles in Ordnung",  info:[["Aktivität","ruhig"],["Uhr","lädt gerade"],["Stufe","3"]] },
+  { name:"Marta S.",   zimmer:"205", status:"ok",    chip:"Alles in Ordnung",  info:[["Termin 11:00","Physiotherapie"],["Uhr","wird getragen"],["Stufe","1"]] },
+  { name:"Kurt L.",    zimmer:"206", status:"warn",  chip:"Uhr nicht angelegt",info:[["Seit","9:00 Uhr"],["Vermutlich","auf Ladestation"],["Stufe","2"]] },
+  { name:"Ilse D.",    zimmer:"207", status:"ok",    chip:"Alles in Ordnung",  info:[["Nachts","unruhig, 2× auf"],["Uhr","wird getragen"],["Stufe","3"]] },
+  { name:"Rudi F.",    zimmer:"208", status:"ok",    chip:"Alles in Ordnung",  info:[["Besuch 15:00","Tochter"],["Uhr","wird getragen"],["Stufe","1"]] }
+];
+
+const NOTIZEN = [
+  { text:"Anna M. war heute Vormittag im Garten unruhig – Weglauf-Alarm 10:41, von Pfleger Timo begleitet zurück.", meta:"10:52 · Timo W." },
+  { text:"Werner K. verweigert die 18-Uhr-Tablette manchmal – klappt besser, wenn man sie mit dem Abendbrot reicht.", meta:"gestern · Sandra M." },
+  { text:"Kurt L. bekommt morgen ein neues Armband (altes drückt) – Familie ist informiert.", meta:"gestern · Sandra M." }
+];
+
+const box = document.getElementById("residents");
+BEWOHNER.forEach(b => {
+  const d = document.createElement("div");
+  d.className = "card resident " + (b.status !== "ok" ? b.status : "");
+  d.innerHTML =
+    '<div class="head"><div class="avatar">' + b.name.charAt(0) + '</div>' +
+    '<div><strong>' + b.name + '</strong><div style="font-size:12px; color:var(--ink-3)">Zimmer ' + b.zimmer + '</div></div></div>' +
+    '<span class="chip ' + b.status + '">' + b.chip + '</span>' +
+    '<div style="margin-top:10px">' +
+    b.info.map(i => '<div class="kv"><span class="k">' + i[0] + '</span><span class="v">' + i[1] + '</span></div>').join("") +
+    '</div>';
+  box.appendChild(d);
+});
+
+const nbox = document.getElementById("notes");
+function zeichneNotizen(){
+  nbox.innerHTML = NOTIZEN.map(n =>
+    '<div class="note">' + n.text + '<div class="meta">' + n.meta + '</div></div>').join("");
+}
+zeichneNotizen();
+
+function toast(t){
+  const alt = document.querySelector(".toast"); if(alt) alt.remove();
+  const el = document.createElement("div"); el.className = "toast"; el.textContent = t;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 3000);
+}
+
+document.getElementById("btn-note").onclick = () => {
+  const inp = document.getElementById("note-input");
+  if(!inp.value.trim()) return;
+  const d = new Date();
+  NOTIZEN.unshift({ text: inp.value.trim(),
+    meta: String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0") + " · Sie" });
+  inp.value = "";
+  zeichneNotizen();
+};
+document.getElementById("note-input").addEventListener("keydown", e => {
+  if(e.key === "Enter") document.getElementById("btn-note").click();
+});
+document.getElementById("btn-export").onclick = () =>
+  toast("Im echten System: PDF-Export der Dokumentation für MDK-Prüfung und Pflegedienstleitung.");
+</script>
+</body>
+</html>
