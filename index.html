@@ -1,0 +1,1490 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MERIDIAN – Prototyp</title>
+<style>
+/* ============================================================
+   MERIDIAN – Klick-Prototyp (Phase 0)
+   Alles in einer Datei: Design, Inhalte und Logik.
+   Keine Installation, kein Internet nötig.
+   ============================================================ */
+
+:root{
+  --bg:#F6F4F0;
+  --card:#FFFFFF;
+  --line:#E5E0D7;
+  --line-soft:#EFEBE3;
+  --ink:#2B2925;
+  --ink-2:#5F5850;
+  --ink-3:#8B8377;
+  --accent:#2F6B5F;
+  --accent-soft:#E7F0ED;
+  --ok:#3B8A6B;
+  --ok-soft:#E6F2EC;
+  --warn:#B5801F;
+  --warn-soft:#FBF1DC;
+  --alarm:#BB4438;
+  --alarm-soft:#FBE9E6;
+  --radius:16px;
+  --shadow:0 1px 2px rgba(43,41,37,.05), 0 8px 24px rgba(43,41,37,.06);
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#171614; --card:#211F1C; --line:#332F2A; --line-soft:#2A2724;
+    --ink:#F0EDE7; --ink-2:#BDB6AC; --ink-3:#8E877D;
+    --accent:#6FB3A2; --accent-soft:#20302C;
+    --ok:#6FB392; --ok-soft:#1D2E27;
+    --warn:#D8A94A; --warn-soft:#302718;
+    --alarm:#E0776A; --alarm-soft:#331E1B;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+  }
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:var(--font); font-size:17px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:96px;
+}
+h1,h2,h3{margin:0; font-weight:650; letter-spacing:-.01em}
+h1{font-size:28px}
+h2{font-size:21px}
+h3{font-size:17px}
+p{margin:0}
+button{font-family:inherit; font-size:inherit; cursor:pointer}
+.hidden{display:none !important}
+
+/* ---------- Grundbausteine ---------- */
+.wrap{max-width:1080px; margin:0 auto; padding:0 20px}
+.card{
+  background:var(--card); border:1px solid var(--line);
+  border-radius:var(--radius); box-shadow:var(--shadow);
+  padding:20px;
+}
+.card h3{display:flex; align-items:center; gap:9px; margin-bottom:4px}
+.card .sub{color:var(--ink-3); font-size:14px}
+.grid{display:grid; gap:16px; grid-template-columns:repeat(2,1fr)}
+@media (max-width:760px){ .grid{grid-template-columns:1fr} }
+.stack{display:flex; flex-direction:column; gap:16px}
+.row{display:flex; align-items:center; gap:10px}
+.spread{display:flex; align-items:center; justify-content:space-between; gap:12px}
+.muted{color:var(--ink-2)}
+.small{font-size:14px}
+.tiny{font-size:13px}
+
+.btn{
+  border:1px solid var(--line); background:var(--card); color:var(--ink);
+  padding:10px 16px; border-radius:999px; font-weight:550;
+  transition:transform .08s ease, background .15s ease;
+}
+.btn:hover{background:var(--line-soft)}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.danger{background:var(--alarm); border-color:var(--alarm); color:#fff}
+.btn.ghost{background:transparent}
+.btn.sm{padding:7px 13px; font-size:14px}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+
+.chip{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:4px 11px; border-radius:999px; font-size:13px; font-weight:600;
+  background:var(--accent-soft); color:var(--accent);
+}
+.chip.ok{background:var(--ok-soft); color:var(--ok)}
+.chip.warn{background:var(--warn-soft); color:var(--warn)}
+.chip.alarm{background:var(--alarm-soft); color:var(--alarm)}
+.chip.off{background:var(--line-soft); color:var(--ink-3)}
+
+.dot{width:9px; height:9px; border-radius:50%; background:currentColor; flex:none}
+.pulse{animation:pulse 1.4s infinite}
+@keyframes pulse{0%{opacity:1}50%{opacity:.3}100%{opacity:1}}
+
+/* ---------- Kopfzeile ---------- */
+header.top{
+  position:sticky; top:0; z-index:40;
+  background:color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+header.top .inner{
+  max-width:1080px; margin:0 auto; padding:12px 20px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.logo{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.02em}
+.logo .mark{
+  width:30px; height:30px; border-radius:9px; flex:none;
+  background:var(--accent); color:#fff;
+  display:grid; place-items:center; font-size:15px; font-weight:700;
+}
+.badge-proto{
+  font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--warn); background:var(--warn-soft); padding:3px 8px; border-radius:6px;
+}
+
+/* ---------- Startbildschirm ---------- */
+.hero{padding:64px 0 40px; text-align:center}
+.hero h1{font-size:38px; margin-bottom:12px}
+.hero .lead{color:var(--ink-2); max-width:620px; margin:0 auto 28px; font-size:19px}
+.hero-cards{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:36px; text-align:left}
+@media (max-width:760px){ .hero-cards{grid-template-columns:1fr} }
+.hero-cards .card{padding:18px}
+.hero-cards h3{font-size:16px}
+
+/* ---------- Onboarding ---------- */
+.ob{max-width:640px; margin:40px auto}
+.progress{height:6px; background:var(--line-soft); border-radius:999px; overflow:hidden; margin-bottom:22px}
+.progress > div{height:100%; background:var(--accent); border-radius:999px; transition:width .3s ease}
+.q-block{font-size:13px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin-bottom:8px}
+.q-text{font-size:23px; font-weight:600; line-height:1.35; margin-bottom:22px; letter-spacing:-.01em}
+.opt{
+  display:block; width:100%; text-align:left; margin-bottom:10px;
+  padding:15px 18px; border-radius:14px; border:1.5px solid var(--line);
+  background:var(--card); font-weight:500;
+}
+.opt:hover{border-color:var(--accent); background:var(--accent-soft)}
+.opt.selected{border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:650}
+.opt .hint{display:block; font-size:13px; color:var(--ink-3); font-weight:400; margin-top:2px}
+.opt.selected .hint{color:var(--accent)}
+
+.slider-wrap{padding:8px 0 4px}
+input[type=range]{width:100%; accent-color:var(--accent)}
+.slider-val{font-size:40px; font-weight:700; text-align:center; color:var(--accent); letter-spacing:-.02em}
+input[type=text]{
+  width:100%; padding:13px 16px; border-radius:12px; font-size:17px;
+  border:1.5px solid var(--line); background:var(--card); color:var(--ink); font-family:inherit;
+}
+input[type=text]:focus{outline:none; border-color:var(--accent)}
+
+/* ---------- Ergebnis ---------- */
+.level-card{border-left:5px solid var(--accent)}
+.level-num{font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent)}
+.mod-list{border-top:1px solid var(--line-soft); margin-top:4px}
+.mod-item{
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  padding:13px 0; border-bottom:1px solid var(--line-soft);
+}
+.mod-item:last-child{border-bottom:none}
+.mod-item .name{font-weight:550}
+.mod-item .why{font-size:13px; color:var(--ink-3); margin-top:1px}
+
+/* Schalter */
+.switch{position:relative; width:46px; height:27px; flex:none}
+.switch input{opacity:0; width:100%; height:100%; margin:0; cursor:pointer; position:absolute; z-index:2}
+.switch .track{
+  position:absolute; inset:0; border-radius:999px; background:var(--line);
+  transition:background .2s ease;
+}
+.switch .knob{
+  position:absolute; top:3px; left:3px; width:21px; height:21px; border-radius:50%;
+  background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:transform .2s ease;
+}
+.switch input:checked ~ .track{background:var(--accent)}
+.switch input:checked ~ .knob{transform:translateX(19px)}
+.switch input:disabled{cursor:not-allowed}
+.switch input:disabled ~ .track{opacity:.4}
+
+/* ---------- Dashboard ---------- */
+.person-bar{
+  display:flex; align-items:center; gap:14px; padding:18px 0 6px; flex-wrap:wrap;
+}
+.avatar{
+  width:52px; height:52px; border-radius:50%; flex:none;
+  background:var(--accent-soft); color:var(--accent);
+  display:grid; place-items:center; font-weight:700; font-size:19px;
+  border:1px solid var(--line);
+}
+.status-card{
+  border-radius:var(--radius); padding:22px 24px; border:1px solid var(--line);
+  background:var(--ok-soft); box-shadow:var(--shadow);
+  display:flex; align-items:center; gap:18px;
+}
+.status-card.alarm{background:var(--alarm-soft); border-color:var(--alarm)}
+.status-card.warn{background:var(--warn-soft); border-color:var(--warn)}
+.status-icon{
+  width:52px; height:52px; border-radius:50%; flex:none; display:grid; place-items:center;
+  background:var(--card); font-size:24px;
+}
+.status-title{font-size:22px; font-weight:650; letter-spacing:-.01em}
+
+.kv{display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid var(--line-soft); font-size:15px}
+.kv:last-child{border-bottom:none}
+.kv .k{color:var(--ink-2)}
+.kv .v{font-weight:600; text-align:right}
+
+/* Karte (Ortung) */
+.map{
+  position:relative; width:100%; aspect-ratio:16/10; border-radius:12px; overflow:hidden;
+  border:1px solid var(--line); background:var(--line-soft); margin-top:12px;
+}
+.map svg{width:100%; height:100%; display:block}
+
+/* Zeitstrahl / Eskalation */
+.tl{list-style:none; margin:14px 0 0; padding:0; position:relative}
+.tl:before{content:""; position:absolute; left:9px; top:6px; bottom:6px; width:2px; background:var(--line)}
+.tl li{position:relative; padding:0 0 16px 32px; font-size:15px}
+.tl li:last-child{padding-bottom:0}
+.tl li .bullet{
+  position:absolute; left:2px; top:3px; width:17px; height:17px; border-radius:50%;
+  background:var(--card); border:2px solid var(--line);
+}
+.tl li.done .bullet{background:var(--ok); border-color:var(--ok)}
+.tl li.active .bullet{background:var(--alarm); border-color:var(--alarm); animation:pulse 1.2s infinite}
+.tl li.pending{opacity:.45}
+.tl li .when{font-size:13px; color:var(--ink-3)}
+
+/* Wissenskarten */
+.know{display:grid; grid-template-columns:repeat(2,1fr); gap:12px}
+@media (max-width:620px){ .know{grid-template-columns:1fr} }
+.know article{
+  border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:var(--bg);
+}
+.know article .tag{font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent)}
+.know article h4{margin:4px 0 4px; font-size:15px; font-weight:650}
+.know article p{font-size:14px; color:var(--ink-2)}
+.know article.fresh{border-color:var(--accent); background:var(--accent-soft)}
+
+/* Tabelle Modulmatrix */
+.matrix{width:100%; border-collapse:collapse; font-size:14px; margin-top:10px}
+.matrix th, .matrix td{padding:9px 8px; text-align:left; border-bottom:1px solid var(--line-soft)}
+.matrix th{font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-3); font-weight:650}
+.matrix td.c{text-align:center}
+.matrix tr.on td:first-child{font-weight:600}
+.matrix tr.off{color:var(--ink-3)}
+
+/* Ereignisliste */
+.evt{display:flex; gap:12px; padding:11px 0; border-bottom:1px solid var(--line-soft); font-size:15px}
+.evt:last-child{border-bottom:none}
+.evt .t{color:var(--ink-3); font-variant-numeric:tabular-nums; font-size:14px; flex:none; width:52px}
+
+/* Empfehlungsbanner */
+.rec{
+  border:1px solid var(--accent); background:var(--accent-soft); border-radius:var(--radius);
+  padding:18px 20px; display:flex; gap:14px; align-items:flex-start;
+}
+
+/* ---------- Notfallprotokoll ---------- */
+.sheet{
+  position:fixed; inset:0; z-index:80; background:rgba(20,18,16,.55);
+  display:flex; align-items:flex-start; justify-content:center; padding:24px 16px; overflow:auto;
+}
+.sheet .panel{
+  background:var(--card); border-radius:20px; max-width:760px; width:100%;
+  box-shadow:0 24px 60px rgba(0,0,0,.35); overflow:hidden; margin-bottom:40px;
+}
+.sheet .panel-head{background:var(--alarm); color:#fff; padding:20px 24px}
+.sheet .panel-body{padding:22px 24px}
+.check{list-style:none; margin:0; padding:0}
+.check li{display:flex; gap:11px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--line-soft)}
+.check li:last-child{border-bottom:none}
+.check input{margin-top:4px; width:19px; height:19px; accent-color:var(--accent); flex:none}
+.check .place{font-weight:550}
+.check .note{font-size:13px; color:var(--ink-3)}
+
+/* ---------- Demo-Leiste ---------- */
+.demobar{
+  position:fixed; left:0; right:0; bottom:0; z-index:60;
+  background:var(--card); border-top:1px solid var(--line);
+  box-shadow:0 -6px 24px rgba(43,41,37,.08);
+}
+.demobar .inner{
+  max-width:1080px; margin:0 auto; padding:12px 20px;
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+}
+.demobar .label{font-size:12px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3); margin-right:4px}
+
+/* Hinweis-Einblendung */
+.toast{
+  position:fixed; bottom:96px; left:50%; transform:translateX(-50%);
+  background:var(--ink); color:var(--bg); padding:12px 20px; border-radius:999px;
+  font-size:15px; z-index:90; box-shadow:var(--shadow); max-width:90vw; text-align:center;
+}
+
+.footnote{color:var(--ink-3); font-size:13px; text-align:center; padding:28px 0 8px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="inner">
+    <div class="logo">
+      <span class="mark">M</span>
+      <span>MERIDIAN</span>
+      <span class="badge-proto">Prototyp</span>
+    </div>
+    <div class="row">
+      <button class="btn sm ghost" id="btn-restart">Neu starten</button>
+    </div>
+  </div>
+</header>
+
+<!-- ============ 1. STARTBILDSCHIRM ============ -->
+<main id="screen-start" class="wrap">
+  <div class="hero">
+    <h1>Der Begleiter, der mitwächst</h1>
+    <p class="lead">
+      Ein Assistenzsystem für Menschen mit Demenz – und für die Angehörigen,
+      die sie begleiten. Es passt sich an, wenn sich die Situation verändert.
+    </p>
+    <button class="btn primary" id="btn-start" style="padding:14px 28px; font-size:18px">
+      Einrichtung starten – dauert 5 Minuten
+    </button>
+    <div class="hero-cards">
+      <div class="card">
+        <h3>Keine Fachsprache</h3>
+        <p class="small muted">15 Fragen aus dem Alltag. Daraus schlägt das System das passende Unterstützungsprofil vor – Sie entscheiden.</p>
+      </div>
+      <div class="card">
+        <h3>Würde vor Überwachung</h3>
+        <p class="small muted">In der ersten Stufe bleibt vieles bewusst aus. Was nicht gebraucht wird, wird nicht eingeschaltet.</p>
+      </div>
+      <div class="card">
+        <h3>Auch für Sie da</h3>
+        <p class="small muted">Wissen, Hilfe vor Ort und ein Belastungs-Check für Angehörige – als gleichwertiger Teil des Produkts.</p>
+      </div>
+    </div>
+    <p class="footnote">Demonstrationsversion mit Beispieldaten. Keine echten Personen, keine echte Ortung.</p>
+  </div>
+</main>
+
+<!-- ============ 2. ONBOARDING ============ -->
+<main id="screen-onboarding" class="wrap hidden">
+  <div class="ob">
+    <div class="progress"><div id="ob-progress" style="width:0%"></div></div>
+    <div class="q-block" id="ob-block"></div>
+    <div class="q-text" id="ob-question"></div>
+    <div id="ob-options"></div>
+    <div class="spread" style="margin-top:24px">
+      <button class="btn ghost sm" id="ob-back">Zurück</button>
+      <span class="tiny muted" id="ob-count"></span>
+    </div>
+  </div>
+</main>
+
+<!-- ============ 3. AUSWERTUNG ============ -->
+<main id="screen-result" class="wrap hidden">
+  <div class="ob" style="max-width:720px">
+    <div class="card level-card">
+      <div class="level-num" id="res-level-num"></div>
+      <h1 id="res-level-name" style="margin:4px 0 10px"></h1>
+      <p class="muted" id="res-level-text"></p>
+      <div id="res-reasons" class="stack" style="gap:8px; margin-top:16px"></div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Das schalten wir für Sie ein</h3>
+      <p class="sub">Alles lässt sich jederzeit ändern – auch später im Dashboard.</p>
+      <div class="mod-list" id="res-modules"></div>
+    </div>
+
+    <button class="btn primary" id="btn-to-dashboard" style="width:100%; margin-top:18px; padding:14px">
+      Übersicht öffnen
+    </button>
+  </div>
+</main>
+
+<!-- ============ 4. DASHBOARD ============ -->
+<main id="screen-dashboard" class="wrap hidden">
+
+  <div class="person-bar">
+    <div class="avatar" id="db-avatar">A</div>
+    <div style="flex:1; min-width:180px">
+      <h2 id="db-name">Anna</h2>
+      <p class="small muted" id="db-level-chip"></p>
+    </div>
+    <button class="btn sm ghost" id="btn-report">Arztbericht als PDF</button>
+  </div>
+
+  <div class="stack" style="margin-top:8px">
+
+    <!-- Statuskarte -->
+    <div class="status-card" id="db-status">
+      <div class="status-icon" id="db-status-icon">✓</div>
+      <div style="flex:1">
+        <div class="status-title" id="db-status-title">Alles in Ordnung</div>
+        <p class="small muted" id="db-status-text">Zuhause, Uhr wird getragen, keine offenen Erinnerungen.</p>
+      </div>
+      <button class="btn danger hidden" id="btn-open-emergency">Notfallprotokoll</button>
+    </div>
+
+    <!-- Empfehlung Stufenwechsel -->
+    <div class="rec hidden" id="db-rec">
+      <span style="font-size:22px">↗</span>
+      <div style="flex:1">
+        <h3 id="db-rec-title">Empfehlung</h3>
+        <p class="small muted" id="db-rec-text"></p>
+        <div class="row" style="margin-top:12px">
+          <button class="btn primary sm" id="btn-rec-accept">Übernehmen</button>
+          <button class="btn sm ghost" id="btn-rec-dismiss">Später</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kartenraster -->
+    <div class="grid">
+
+      <!-- Ortung -->
+      <div class="card" id="card-location">
+        <div class="spread">
+          <h3><span class="dot" style="color:var(--ok)"></span> Aufenthalt</h3>
+          <span class="chip ok" id="loc-chip">Zuhause</span>
+        </div>
+        <p class="sub" id="loc-sub">Sicherer Bereich: 800 m um die Wohnung</p>
+        <div class="map">
+          <svg viewBox="0 0 320 200" id="loc-map" aria-label="Vereinfachte Karte">
+            <rect width="320" height="200" fill="var(--line-soft)"/>
+            <!-- Straßen -->
+            <g stroke="var(--card)" stroke-width="12" stroke-linecap="round">
+              <line x1="-10" y1="70" x2="330" y2="86"/>
+              <line x1="-10" y1="150" x2="330" y2="140"/>
+              <line x1="90" y1="-10" x2="104" y2="210"/>
+              <line x1="230" y1="-10" x2="214" y2="210"/>
+            </g>
+            <g stroke="var(--card)" stroke-width="6" stroke-linecap="round" opacity=".75">
+              <line x1="104" y1="120" x2="214" y2="126"/>
+              <line x1="30" y1="-10" x2="42" y2="210"/>
+              <line x1="-10" y1="30" x2="330" y2="24"/>
+            </g>
+            <!-- Grünfläche -->
+            <rect x="118" y="26" width="82" height="46" rx="10" fill="var(--ok-soft)"/>
+            <text x="159" y="55" font-size="9" fill="var(--ok)" text-anchor="middle" font-family="sans-serif">Stadtpark</text>
+            <!-- Sicherer Radius -->
+            <circle id="loc-fence" cx="104" cy="126" r="62" fill="var(--accent)" fill-opacity=".07"
+                    stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>
+            <!-- Zuhause -->
+            <g>
+              <circle cx="104" cy="126" r="7" fill="var(--accent)"/>
+              <text x="104" y="146" font-size="9" fill="var(--ink-2)" text-anchor="middle" font-family="sans-serif">Zuhause</text>
+            </g>
+            <!-- Person -->
+            <g id="loc-person" transform="translate(104,126)">
+              <circle r="13" fill="var(--ok)" fill-opacity=".22"/>
+              <circle r="6" fill="var(--ok)" stroke="var(--card)" stroke-width="2"/>
+            </g>
+          </svg>
+        </div>
+        <div class="kv" style="margin-top:12px"><span class="k">Zuletzt gesehen</span><span class="v" id="loc-time">gerade eben</span></div>
+        <div class="kv"><span class="k">Live-Ortung</span><span class="v" id="loc-mode">nur im Notfall</span></div>
+      </div>
+
+      <!-- Uhr -->
+      <div class="card" id="card-watch">
+        <div class="spread">
+          <h3><span class="dot" style="color:var(--ok)"></span> Uhr</h3>
+          <span class="chip ok" id="watch-chip">Wird getragen</span>
+        </div>
+        <p class="sub">Trage- und Ladeüberwachung</p>
+        <div class="kv" style="margin-top:10px"><span class="k">Akku</span><span class="v" id="watch-batt">78 %</span></div>
+        <div class="kv"><span class="k">Angelegt seit</span><span class="v" id="watch-worn">7:40 Uhr</span></div>
+        <div class="kv"><span class="k">Letztes Laden</span><span class="v" id="watch-charge">gestern, 22:15 Uhr</span></div>
+        <div id="watch-note" class="hidden" style="margin-top:14px; padding:13px 15px; border-radius:12px; background:var(--warn-soft); color:var(--warn); font-size:14px"></div>
+      </div>
+
+      <!-- Termine -->
+      <div class="card" id="card-appointments">
+        <div class="spread">
+          <h3><span class="dot" style="color:var(--accent)"></span> Termine heute</h3>
+          <span class="chip" id="appt-chip">2 Termine</span>
+        </div>
+        <p class="sub">Erinnerung auf der Uhr, mit Quittierung</p>
+        <div id="appt-list" style="margin-top:8px"></div>
+      </div>
+
+      <!-- Medikamente -->
+      <div class="card" id="card-meds">
+        <div class="spread">
+          <h3><span class="dot" style="color:var(--ok)"></span> Medikamente heute</h3>
+          <span class="chip ok" id="med-chip">Nach Plan</span>
+        </div>
+        <p class="sub">Mit Eskalationskette bei fehlender Quittierung</p>
+        <div id="med-list" style="margin-top:8px"></div>
+        <div id="med-escalation" class="hidden" style="margin-top:16px; padding-top:14px; border-top:1px solid var(--line-soft)">
+          <h3 style="font-size:15px">Eskalationskette läuft</h3>
+          <ul class="tl" id="med-timeline"></ul>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Module -->
+    <div class="card">
+      <div class="spread">
+        <h3>Ihre Module</h3>
+        <span class="chip" id="mod-count"></span>
+      </div>
+      <p class="sub">Voreingestellt nach Ihrem Profil – jedes Modul einzeln änderbar.</p>
+      <div class="mod-list" id="db-modules"></div>
+    </div>
+
+    <!-- Angehörigen-Modul -->
+    <div class="card">
+      <h3>Für Sie als Angehörige:r</h3>
+      <p class="sub">Die zweite Hälfte des Produkts: Wissen, Hilfe vor Ort, Ihre eigene Belastung.</p>
+
+      <h3 style="font-size:15px; margin-top:18px">Wissens-Kompass</h3>
+      <div class="know" id="know-cards" style="margin-top:10px"></div>
+
+      <h3 style="font-size:15px; margin-top:22px">Hilfe in Ihrer Nähe</h3>
+      <div class="row" style="margin-top:10px; gap:8px">
+        <input type="text" id="plz" placeholder="Postleitzahl" value="45127" style="max-width:160px">
+        <button class="btn sm" id="btn-plz">Suchen</button>
+      </div>
+      <div id="help-list" style="margin-top:12px"></div>
+
+      <h3 style="font-size:15px; margin-top:22px">Ihr Belastungs-Check</h3>
+      <div id="burden-box" style="margin-top:10px"></div>
+    </div>
+
+    <!-- Familie -->
+    <div class="card">
+      <h3>Familie &amp; Rollen</h3>
+      <p class="sub">Wer sieht was, wer wird wann benachrichtigt.</p>
+      <div class="mod-list" id="family-list"></div>
+    </div>
+
+    <!-- Verlauf -->
+    <div class="card">
+      <h3>Verlauf</h3>
+      <p class="sub">Was heute passiert ist.</p>
+      <div id="event-list" style="margin-top:8px"></div>
+    </div>
+
+  </div>
+
+  <p class="footnote">
+    MERIDIAN unterstützt – es ersetzt keine Aufsicht und stellt keine Diagnosen.<br>
+    Prototyp mit Beispieldaten, Stand August 2026.
+  </p>
+</main>
+
+<!-- ============ NOTFALLPROTOKOLL ============ -->
+<div class="sheet hidden" id="emergency">
+  <div class="panel">
+    <div class="panel-head">
+      <div class="spread">
+        <div>
+          <div style="font-size:12px; letter-spacing:.08em; text-transform:uppercase; opacity:.85; font-weight:700">Notfallprotokoll</div>
+          <h2 style="margin-top:3px">Anna hat den sicheren Bereich verlassen</h2>
+        </div>
+        <button class="btn sm ghost" id="btn-close-emergency" style="background:rgba(255,255,255,.16); border-color:transparent; color:#fff">Schließen</button>
+      </div>
+    </div>
+    <div class="panel-body stack">
+      <div class="grid" style="gap:14px">
+        <div class="card" style="box-shadow:none">
+          <h3 style="font-size:15px">Letzte Position</h3>
+          <p class="small muted" id="em-position">Ostpreußenstraße, ca. 1,4 km nordöstlich – vor 6 Minuten</p>
+          <div class="row" style="margin-top:12px; gap:8px; flex-wrap:wrap">
+            <button class="btn sm primary" id="btn-share-link">Live-Standort teilen</button>
+            <button class="btn sm" id="btn-call">Anrufen</button>
+          </div>
+        </div>
+        <div class="card" style="box-shadow:none">
+          <h3 style="font-size:15px">Personenbeschreibung</h3>
+          <p class="small muted">Anna, 78 Jahre, ca. 1,62 m, weißes Haar, blauer Mantel, geht langsam mit Stock. Reagiert auf Ansprache, wirkt oft freundlich, kann Adresse nicht nennen.</p>
+          <p class="tiny muted" style="margin-top:8px">Für Polizei und Suchhelfer vorbereitet.</p>
+        </div>
+      </div>
+
+      <div class="card" style="box-shadow:none">
+        <h3 style="font-size:15px">Zuerst hier suchen</h3>
+        <p class="small muted">Menschen mit Demenz gehen häufig zu Orten aus früheren Lebensphasen.</p>
+        <ul class="check" id="em-check" style="margin-top:10px"></ul>
+      </div>
+
+      <div class="card" style="box-shadow:none; background:var(--accent-soft); border-color:var(--accent)">
+        <h3 style="font-size:15px">Auf der Uhr läuft gerade</h3>
+        <p class="small muted">Vertraute Stimme (Tochter Lena): „Bleib einfach stehen, wo du bist. Ich bin schon unterwegs zu dir.“ – wird alle 90 Sekunden wiederholt. Keine Alarmtöne.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DEMO-LEISTE ============ -->
+<div class="demobar hidden" id="demobar">
+  <div class="inner">
+    <span class="label">Demo</span>
+    <button class="btn sm" data-sim="weglauf">Weglauf-Alarm</button>
+    <button class="btn sm" data-sim="medikament">Medikament verpasst</button>
+    <button class="btn sm" data-sim="uhr">Uhr nicht geladen</button>
+    <button class="btn sm" data-sim="sturz">Sturz erkannt</button>
+    <button class="btn sm" data-sim="empfehlung">Stufenwechsel vorschlagen</button>
+    <button class="btn sm ghost" data-sim="reset">Alles zurücksetzen</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   TEIL 1 – Der Fragenkatalog (Kapitel 4 des Masterplans)
+   Jede Antwort hat Punkte. Viele Punkte = mehr Unterstützung nötig.
+   ============================================================ */
+
+const FRAGEN = [
+  { block:"Zu Beginn", typ:"text", id:"name",
+    text:"Wie heißt die Person, um die es geht?",
+    platzhalter:"Vorname genügt" },
+
+  // Block A – Orientierung und Mobilität
+  { block:"Orientierung & Mobilität", id:"a1",
+    text:"Findet Ihr Angehöriger vertraute Wege – zum Beispiel zum Bäcker – allein und sicher?",
+    optionen:[
+      {t:"Ja, immer", p:0},
+      {t:"Meistens", p:1},
+      {t:"Nur noch manchmal", p:2},
+      {t:"Nein, gar nicht mehr", p:3}
+    ]},
+  { block:"Orientierung & Mobilität", id:"a2",
+    text:"Ist er oder sie schon einmal vom Weg abgekommen oder hat sich verlaufen?",
+    optionen:[
+      {t:"Nein, noch nie", p:0},
+      {t:"Einmal", p:2},
+      {t:"Mehrfach", p:3, flag:"verlaufen"}
+    ]},
+  { block:"Orientierung & Mobilität", id:"a3",
+    text:"Verlässt er oder sie das Haus zu ungewöhnlichen Zeiten, etwa nachts?",
+    optionen:[
+      {t:"Nie", p:0},
+      {t:"Ganz selten", p:1},
+      {t:"Manchmal", p:2, flag:"nachts"},
+      {t:"Häufig", p:3, flag:"nachts"}
+    ]},
+  { block:"Orientierung & Mobilität", id:"a4",
+    text:"Ist er oder sie noch allein mit Bus, Bahn oder Taxi unterwegs?",
+    optionen:[
+      {t:"Ja, ohne Probleme", p:0},
+      {t:"Ja, aber mit Unsicherheiten", p:1},
+      {t:"Nur in Begleitung", p:2},
+      {t:"Gar nicht mehr", p:3}
+    ]},
+
+  // Block B – Gedächtnis und Alltag
+  { block:"Gedächtnis & Alltag", id:"b1",
+    text:"Werden Termine – Arzt, Friseur, Familie – ohne Erinnerung wahrgenommen?",
+    optionen:[
+      {t:"Ja, zuverlässig", p:0},
+      {t:"Meistens", p:1},
+      {t:"Nur mit Erinnerung", p:2},
+      {t:"Auch mit Erinnerung schwierig", p:3}
+    ]},
+  { block:"Gedächtnis & Alltag", id:"b2",
+    text:"Weiß er oder sie in der Regel, welcher Wochentag gerade ist?",
+    optionen:[
+      {t:"Ja, fast immer", p:0},
+      {t:"Meistens", p:1},
+      {t:"Selten", p:2},
+      {t:"Nein", p:3}
+    ]},
+  { block:"Gedächtnis & Alltag", id:"b3",
+    text:"Werden Herd, Wasserhahn und Türen zuverlässig bedient und geschlossen?",
+    optionen:[
+      {t:"Ja, immer", p:0},
+      {t:"Meistens", p:1},
+      {t:"Es kam schon zu Problemen", p:2, flag:"haushalt"},
+      {t:"Häufig Probleme", p:3, flag:"haushalt"}
+    ]},
+
+  // Block C – Medikamente und Gesundheit
+  { block:"Medikamente & Gesundheit", id:"c1",
+    text:"Nimmt er oder sie Medikamente – und wenn ja, wie zuverlässig?",
+    optionen:[
+      {t:"Keine Medikamente", p:0, flag:"keine_medis"},
+      {t:"Ja, selbstständig und zuverlässig", p:1},
+      {t:"Ja, aber nur mit Erinnerung", p:2},
+      {t:"Ja, nur mit Hilfe von außen", p:3}
+    ]},
+  { block:"Medikamente & Gesundheit", id:"c2",
+    text:"Gab es Stürze in den letzten zwölf Monaten?",
+    optionen:[
+      {t:"Keine", p:0},
+      {t:"Einen", p:2, flag:"sturz"},
+      {t:"Mehrere", p:3, flag:"sturz"}
+    ]},
+  { block:"Medikamente & Gesundheit", id:"c3",
+    text:"Gibt es einen Pflegegrad?",
+    hinweis:"Wichtig für spätere Kostenübernahme durch die Pflegekasse.",
+    optionen:[
+      {t:"Nein", p:0},
+      {t:"Beantragt", p:1},
+      {t:"Pflegegrad 1 oder 2", p:1, flag:"pflegegrad"},
+      {t:"Pflegegrad 3 bis 5", p:2, flag:"pflegegrad"}
+    ]},
+
+  // Block D – Technik und Akzeptanz
+  { block:"Technik & Akzeptanz", id:"d1",
+    text:"Trägt er oder sie bereits eine Uhr?",
+    hinweis:"Eine bestehende Gewohnheit ist Gold wert.",
+    optionen:[
+      {t:"Ja, jeden Tag", p:0, flag:"uhr_gewohnt"},
+      {t:"Gelegentlich", p:1},
+      {t:"Nein", p:2}
+    ]},
+  { block:"Technik & Akzeptanz", id:"d2",
+    text:"Wie steht er oder sie zu Technik?",
+    optionen:[
+      {t:"Neugierig, probiert gern aus", p:0},
+      {t:"Neutral", p:1},
+      {t:"Eher ablehnend", p:2, flag:"technik_ablehnend"}
+    ]},
+  { block:"Technik & Akzeptanz", id:"d3",
+    text:"Wer soll außer Ihnen Zugriff und Benachrichtigungen bekommen?",
+    optionen:[
+      {t:"Nur ich", p:0},
+      {t:"Weitere Familienmitglieder", p:0, flag:"familie"},
+      {t:"Familie und Pflegedienst", p:0, flag:"pflegedienst"}
+    ]},
+
+  // Block E – Situation der Angehörigen
+  { block:"Ihre Situation", id:"e1",
+    text:"Wohnen Sie im selben Haushalt, in der Nähe oder weiter entfernt?",
+    optionen:[
+      {t:"Im selben Haushalt", p:0},
+      {t:"In der Nähe", p:1},
+      {t:"Weiter entfernt", p:2, flag:"entfernt"}
+    ]},
+  { block:"Ihre Situation", typ:"skala", id:"e2",
+    text:"Wie stark fühlen Sie sich zurzeit belastet?",
+    hinweis:"1 bedeutet gar nicht, 10 bedeutet sehr stark. Ihre Einschätzung, keine Bewertung." }
+];
+
+/* ============================================================
+   TEIL 2 – Die Module (Kapitel 5, Modul-Matrix)
+   Für jede Stufe steht hier, ob das Modul standardmäßig an ist.
+   ============================================================ */
+
+const MODULE = [
+  { id:"orientierung", name:"Tages- und Orientierungsanzeige",
+    text:"Wochentag, Datum, Tageszeit und nächster Termin auf der Uhr.",
+    stufen:[true,true,true] },
+  { id:"termine", name:"Terminerinnerung mit Quittierung",
+    text:"Sanfte Erinnerung auf der Uhr, die bestätigt werden kann.",
+    stufen:[true,true,true] },
+  { id:"medikamente", name:"Medikamenten-Erinnerung",
+    text:"Ab Stufe 2 mit Eskalationskette bis zur Benachrichtigung an Sie.",
+    stufen:[false,true,true] },
+  { id:"navigation", name:"Navigation zu gespeicherten Zielen",
+    text:"Arzt, Bäcker, Tochter – auf Wunsch führt die Uhr hin.",
+    stufen:[true,true,false] },
+  { id:"heimweg", name:"„Bring mich nach Hause“-Knopf",
+    text:"Ein großer Knopf startet die Heimführung und informiert Sie.",
+    stufen:[false,true,true] },
+  { id:"geofence", name:"Sicherer Bereich (Geofencing)",
+    text:"Meldung, wenn der vereinbarte Radius verlassen wird.",
+    stufen:[false,true,true],
+    hinweisAus:"In Stufe 1 bewusst aus – Würde vor Überwachung." },
+  { id:"route", name:"Routenabweichungs-Alarm",
+    text:"Meldung, wenn ein bekannter Weg deutlich verlassen wird.",
+    stufen:[false,true,true] },
+  { id:"live", name:"Live-Ortung für Angehörige",
+    text:"Stufe 1 nur im Notfall, Stufe 3 dauerhaft.",
+    stufen:[false,true,true] },
+  { id:"sturz", name:"Sturzerkennung und Inaktivitätsalarm",
+    text:"Nutzt die eingebaute Sturzerkennung der Uhr.",
+    stufen:[false,false,true] },
+  { id:"tragen", name:"Lade- und Trageüberwachung",
+    text:"Meldet, wenn die Uhr nicht geladen oder nicht angelegt wurde.",
+    stufen:[true,true,true] },
+  { id:"notfall", name:"Notfallprotokoll (Suchmodus)",
+    text:"Position, Foto, Beschreibung, Suchorte, Standort-Link – auf einen Klick.",
+    stufen:[true,true,true] },
+  { id:"anker", name:"Gedächtnis-Anker",
+    text:"Fotos vertrauter Menschen mit Namen, kleiner Tagesrückblick.",
+    stufen:[true,true,true] },
+  { id:"bericht", name:"Arzt- und Pflegebericht (PDF)",
+    text:"Verlauf und Auffälligkeiten als Export für Termine.",
+    stufen:[false,true,true] },
+  { id:"angehoerige", name:"Angehörigen-Modul",
+    text:"Wissen, Hilfe vor Ort, Belastungs-Check, Familienkoordination.",
+    stufen:[true,true,true], immerAn:true }
+];
+
+const STUFEN = [
+  { num:1, name:"Der dezente Begleiter",
+    text:"Ihr Angehöriger lebt weitgehend selbstständig. Das System hält sich im Hintergrund und hilft nur dort, wo es wirklich gebraucht wird – Akzeptanz ist jetzt das Wichtigste." },
+  { num:2, name:"Das Sicherheitsnetz",
+    text:"Es gibt erste Situationen, die Sorge machen. Das System spannt ein Netz auf: sicherer Bereich, Heimweg-Knopf und Erinnerungen, die nachfassen, statt zu verpuffen." },
+  { num:3, name:"Der stille Schutzengel",
+    text:"Die Uhr wird nicht mehr bewusst bedient. Sie arbeitet still als Sensor – alle Meldungen laufen bei Ihnen auf, nicht mehr bei Ihrem Angehörigen." }
+];
+
+/* ============================================================
+   TEIL 3 – Zustand der Anwendung
+   ============================================================ */
+
+const state = {
+  frageIndex: 0,
+  antworten: {},      // id -> {punkte, text, flag}
+  flags: new Set(),
+  name: "Anna",
+  belastung: 5,
+  stufe: 1,
+  punkte: 0,
+  module: {},         // id -> true/false
+  alarm: null,        // null | "weglauf" | "sturz"
+  ereignisse: [],
+  medEskalationStufe: 0,
+  wissenNeu: null
+};
+
+const $  = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
+
+function zeigeBildschirm(id){
+  ["screen-start","screen-onboarding","screen-result","screen-dashboard"]
+    .forEach(s => $("#"+s).classList.toggle("hidden", s !== id));
+  $("#demobar").classList.toggle("hidden", id !== "screen-dashboard");
+  window.scrollTo(0,0);
+}
+
+function toast(text){
+  const alt = $(".toast"); if(alt) alt.remove();
+  const el = document.createElement("div");
+  el.className = "toast"; el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+function uhrzeit(){
+  const d = new Date();
+  return String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
+}
+
+function ereignis(text, art){
+  state.ereignisse.unshift({ zeit: uhrzeit(), text, art: art || "info" });
+  zeichneEreignisse();
+}
+
+/* ============================================================
+   TEIL 4 – Onboarding: Fragen anzeigen und beantworten
+   ============================================================ */
+
+function zeigeFrage(){
+  const f = FRAGEN[state.frageIndex];
+  $("#ob-progress").style.width = ((state.frageIndex) / FRAGEN.length * 100) + "%";
+  $("#ob-block").textContent = f.block;
+  $("#ob-question").textContent = f.text;
+  $("#ob-count").textContent = "Frage " + (state.frageIndex+1) + " von " + FRAGEN.length;
+  $("#ob-back").style.visibility = state.frageIndex === 0 ? "hidden" : "visible";
+
+  const box = $("#ob-options");
+  box.innerHTML = "";
+
+  if(f.hinweis){
+    const h = document.createElement("p");
+    h.className = "small muted";
+    h.style.margin = "-14px 0 18px";
+    h.textContent = f.hinweis;
+    box.appendChild(h);
+  }
+
+  // Freitext (Name)
+  if(f.typ === "text"){
+    const inp = document.createElement("input");
+    inp.type = "text"; inp.placeholder = f.platzhalter; inp.value = state.name === "Anna" ? "" : state.name;
+    box.appendChild(inp);
+    const b = document.createElement("button");
+    b.className = "btn primary"; b.style.marginTop = "16px"; b.textContent = "Weiter";
+    b.onclick = () => { state.name = inp.value.trim() || "Anna"; weiter(); };
+    inp.addEventListener("keydown", e => { if(e.key === "Enter") b.click(); });
+    box.appendChild(b);
+    setTimeout(() => inp.focus(), 80);
+    return;
+  }
+
+  // Schieberegler (Belastung)
+  if(f.typ === "skala"){
+    const wrap = document.createElement("div");
+    wrap.className = "slider-wrap";
+    wrap.innerHTML =
+      '<div class="slider-val" id="sk-val">' + state.belastung + '</div>' +
+      '<input type="range" min="1" max="10" value="' + state.belastung + '" id="sk">' +
+      '<div class="spread tiny muted"><span>gar nicht</span><span>sehr stark</span></div>';
+    box.appendChild(wrap);
+    const b = document.createElement("button");
+    b.className = "btn primary"; b.style.marginTop = "20px"; b.textContent = "Auswertung ansehen";
+    b.onclick = () => { state.belastung = Number($("#sk").value); weiter(); };
+    box.appendChild(b);
+    $("#sk").addEventListener("input", e => { $("#sk-val").textContent = e.target.value; });
+    return;
+  }
+
+  // Normale Auswahlfrage
+  f.optionen.forEach(o => {
+    const b = document.createElement("button");
+    b.className = "opt" + (state.antworten[f.id] && state.antworten[f.id].text === o.t ? " selected" : "");
+    b.innerHTML = "<span>" + o.t + "</span>";
+    b.onclick = () => {
+      // alte Markierung dieser Frage entfernen
+      const alt = state.antworten[f.id];
+      if(alt && alt.flag) state.flags.delete(alt.flag);
+      state.antworten[f.id] = { punkte:o.p, text:o.t, flag:o.flag };
+      if(o.flag) state.flags.add(o.flag);
+      setTimeout(weiter, 140);
+    };
+    box.appendChild(b);
+  });
+}
+
+function weiter(){
+  if(state.frageIndex < FRAGEN.length - 1){
+    state.frageIndex++;
+    zeigeFrage();
+  } else {
+    auswerten();
+    zeigeErgebnis();
+    zeigeBildschirm("screen-result");
+  }
+}
+
+function zurueck(){
+  if(state.frageIndex > 0){ state.frageIndex--; zeigeFrage(); }
+}
+
+/* ============================================================
+   TEIL 5 – Auswertung: Punkte zu Stufe, Stufe zu Modulen
+   ============================================================ */
+
+function auswerten(){
+  let punkte = 0;
+  Object.values(state.antworten).forEach(a => punkte += a.punkte);
+  state.punkte = punkte;
+
+  // Grundeinstufung über die Gesamtpunkte (max. ca. 35)
+  let stufe = punkte <= 9 ? 1 : (punkte <= 20 ? 2 : 3);
+
+  // Sicherheitsregeln: einzelne Antworten heben die Stufe an,
+  // auch wenn die Gesamtpunktzahl noch niedrig ist.
+  if(state.flags.has("verlaufen") && stufe < 2) stufe = 2;
+  if(state.flags.has("haushalt")  && stufe < 2) stufe = 2;
+  if(state.flags.has("nachts")    && stufe < 2) stufe = 2;
+  state.stufe = stufe;
+
+  // Module aus der Matrix vorbelegen
+  MODULE.forEach(m => { state.module[m.id] = m.immerAn ? true : m.stufen[stufe-1]; });
+
+  // Feinjustierung anhand einzelner Antworten
+  if(state.flags.has("keine_medis")) state.module.medikamente = false;
+  if(state.flags.has("sturz"))       state.module.sturz = true;
+  if(state.flags.has("entfernt"))    state.module.live = true;
+  if(state.flags.has("technik_ablehnend") && stufe === 1) state.module.anker = false;
+}
+
+function begruendungen(){
+  const g = [];
+  if(state.flags.has("verlaufen"))
+    g.push("Weil sich Ihr Angehöriger schon mehrfach verlaufen hat, empfehlen wir den sicheren Bereich – auch wenn sonst noch vieles gut läuft.");
+  if(state.flags.has("nachts"))
+    g.push("Nächtliches Verlassen der Wohnung ist die häufigste gefährliche Situation. Der sichere Bereich gilt nachts strenger als tagsüber.");
+  if(state.flags.has("sturz"))
+    g.push("Nach einem Sturz in den letzten zwölf Monaten haben wir die Sturzerkennung eingeschaltet.");
+  if(state.flags.has("keine_medis"))
+    g.push("Ohne Medikamente lassen wir die Medikamenten-Erinnerung aus – weniger ist hier mehr.");
+  if(state.flags.has("entfernt"))
+    g.push("Weil Sie weiter entfernt wohnen, ist die Ortung für Sie etwas großzügiger eingestellt.");
+  if(state.flags.has("uhr_gewohnt"))
+    g.push("Ihr Angehöriger trägt bereits täglich eine Uhr – das ist die beste Ausgangslage, die es gibt.");
+  if(state.flags.has("technik_ablehnend"))
+    g.push("Bei Zurückhaltung gegenüber Technik starten wir bewusst mit wenigen Funktionen. Nachrüsten ist jederzeit möglich.");
+  if(state.flags.has("pflegegrad"))
+    g.push("Mit Pflegegrad könnten künftig bis zu 50 € im Monat von der Pflegekasse übernommen werden.");
+  if(state.belastung >= 7)
+    g.push("Sie haben Ihre eigene Belastung mit " + state.belastung + " von 10 angegeben. Wir zeigen Ihnen deshalb gleich passende Entlastungsangebote.");
+  return g;
+}
+
+function zeigeErgebnis(){
+  const s = STUFEN[state.stufe-1];
+  $("#res-level-num").textContent = "Unterstützungsprofil – Stufe " + s.num;
+  $("#res-level-name").textContent = s.name;
+  $("#res-level-text").textContent = s.text;
+
+  const rb = $("#res-reasons"); rb.innerHTML = "";
+  begruendungen().forEach(t => {
+    const d = document.createElement("div");
+    d.style.cssText = "display:flex; gap:10px; align-items:flex-start; font-size:15px";
+    d.innerHTML = '<span style="color:var(--accent); font-weight:700">•</span><span class="muted">' + t + '</span>';
+    rb.appendChild(d);
+  });
+
+  zeichneModulliste("#res-modules", true);
+}
+
+/* Modul-Liste mit Schaltern – wird an zwei Stellen verwendet */
+function zeichneModulliste(ziel, nurAktive){
+  const box = $(ziel); box.innerHTML = "";
+  MODULE.forEach(m => {
+    const an = !!state.module[m.id];
+    if(nurAktive && !an && !m.hinweisAus) return;
+
+    const row = document.createElement("div");
+    row.className = "mod-item";
+    const links = document.createElement("div");
+    links.innerHTML = '<div class="name">' + m.name + '</div>' +
+                      '<div class="why">' + (an ? m.text : (m.hinweisAus || m.text)) + '</div>';
+    const sw = document.createElement("label");
+    sw.className = "switch";
+    sw.innerHTML = '<input type="checkbox" ' + (an ? "checked" : "") + (m.immerAn ? " disabled" : "") + '>' +
+                   '<span class="track"></span><span class="knob"></span>';
+    sw.querySelector("input").addEventListener("change", e => {
+      state.module[m.id] = e.target.checked;
+      ereignis((e.target.checked ? "Modul eingeschaltet: " : "Modul ausgeschaltet: ") + m.name, "info");
+      aktualisiereDashboard();
+    });
+    row.appendChild(links); row.appendChild(sw);
+    box.appendChild(row);
+  });
+}
+
+/* ============================================================
+   TEIL 6 – Dashboard
+   ============================================================ */
+
+const TERMINE = [
+  { zeit:"10:30", titel:"Frau Dr. Berger, Hausärztin", ort:"Kirchstraße 12", status:"quittiert" },
+  { zeit:"15:00", titel:"Kaffee mit Lena",             ort:"zu Hause",       status:"offen" }
+];
+
+const MEDIKAMENTE = [
+  { zeit:"08:00", titel:"Blutdrucktablette", status:"genommen" },
+  { zeit:"12:30", titel:"Schilddrüse",       status:"genommen" },
+  { zeit:"18:00", titel:"Blutverdünner",     status:"offen" }
+];
+
+const WISSEN = [
+  { tag:"Grundlagen", titel:"Warum Widerspruch nicht hilft",
+    text:"Wer korrigiert, gewinnt selten. Mitgehen und ablenken nimmt Druck aus fast jeder Situation." },
+  { tag:"Alltag", titel:"Die Uhr zur Gewohnheit machen",
+    text:"Laden am Abend an dieselbe Handlung koppeln – zum Beispiel ans Zähneputzen. Nach zwei Wochen läuft es von allein." },
+  { tag:"Recht", titel:"Vorsorgevollmacht – jetzt, nicht später",
+    text:"Solange Ihr Angehöriger noch selbst entscheiden kann, ist vieles einfach zu regeln. Danach wird es aufwendig." },
+  { tag:"Geld", titel:"Entlastungsbetrag: 131 € im Monat",
+    text:"Ab Pflegegrad 1 steht Ihnen dieser Betrag zu (§45b SGB XI). Er verfällt, wenn er nicht abgerufen wird." }
+];
+
+const WISSEN_WEGLAUF = {
+  tag:"Gerade passiert", titel:"Warum Menschen mit Demenz weglaufen",
+  text:"Meist steckt ein altes Ziel dahinter: zur Arbeit, zu den Kindern, nach Hause – gemeint ist oft das Elternhaus. Wer das Ziel kennt, findet den Weg." };
+
+const HILFE = [
+  { name:"Pflegestützpunkt Essen-Mitte", art:"Beratung, kostenfrei", weg:"1,2 km" },
+  { name:"Alzheimer Gesellschaft, Angehörigengruppe", art:"jeden 2. Dienstag, 18 Uhr", weg:"2,4 km" },
+  { name:"Tagespflege Sonnenhof", art:"Plätze frei ab September", weg:"3,1 km" },
+  { name:"Betreuungsgruppe der Caritas", art:"Entlastungsbetrag abrechenbar", weg:"1,8 km" }
+];
+
+const SUCHORTE = [
+  { ort:"Ehemalige Wohnung, Bergstraße 8", note:"Dort hat Anna 34 Jahre gelebt – häufigstes Ziel." },
+  { ort:"Bäckerei Kleff am Markt", note:"Täglicher Weg über viele Jahre." },
+  { ort:"Friedhof, Grab von Ehemann Werner", note:"Ging früher jeden Sonntag hin." },
+  { ort:"Bushaltestelle Kirchplatz", note:"Wartet dort manchmal ohne Ziel." },
+  { ort:"Stadtpark, Bank am Teich", note:"Lieblingsplatz im Sommer." }
+];
+
+function aktualisiereDashboard(){
+  const s = STUFEN[state.stufe-1];
+  $("#db-name").textContent = state.name;
+  $("#db-avatar").textContent = state.name.charAt(0).toUpperCase();
+  $("#db-level-chip").innerHTML =
+    '<span class="chip">Stufe ' + s.num + ' · ' + s.name + '</span>';
+
+  zeichneStatus();
+  zeichneOrt();
+  zeichneUhr();
+  zeichneTermine();
+  zeichneMedikamente();
+  zeichneModulliste("#db-modules", false);
+  $("#mod-count").textContent =
+    Object.values(state.module).filter(Boolean).length + " von " + MODULE.length + " aktiv";
+  zeichneWissen();
+  zeichneHilfe();
+  zeichneBelastung();
+  zeichneFamilie();
+  zeichneEreignisse();
+}
+
+function zeichneStatus(){
+  const k = $("#db-status");
+  const offeneMed = state.medEskalationStufe > 0;
+  k.classList.remove("alarm","warn");
+  $("#btn-open-emergency").classList.add("hidden");
+
+  if(state.alarm === "weglauf"){
+    k.classList.add("alarm");
+    $("#db-status-icon").textContent = "!";
+    $("#db-status-title").textContent = state.name + " hat den sicheren Bereich verlassen";
+    $("#db-status-text").textContent = "Seit 6 Minuten unterwegs Richtung Nordosten. Live-Ortung ist aktiv.";
+    $("#btn-open-emergency").classList.remove("hidden");
+  } else if(state.alarm === "sturz"){
+    k.classList.add("alarm");
+    $("#db-status-icon").textContent = "!";
+    $("#db-status-title").textContent = "Möglicher Sturz erkannt";
+    $("#db-status-text").textContent = "Die Uhr meldet einen harten Aufprall und danach wenig Bewegung. " + state.name + " hat nicht reagiert.";
+  } else if(offeneMed){
+    k.classList.add("warn");
+    $("#db-status-icon").textContent = "•";
+    $("#db-status-title").textContent = "Ein Medikament ist offen";
+    $("#db-status-text").textContent = "Die Erinnerung um 18:00 Uhr wurde noch nicht bestätigt. Die Eskalationskette läuft.";
+  } else {
+    $("#db-status-icon").textContent = "✓";
+    $("#db-status-title").textContent = "Alles in Ordnung";
+    $("#db-status-text").textContent = "Zuhause, Uhr wird getragen, keine offenen Erinnerungen.";
+  }
+}
+
+function zeichneOrt(){
+  const person = $("#loc-person");
+  const fence  = $("#loc-fence");
+  fence.style.display = state.module.geofence ? "" : "none";
+  $("#loc-sub").textContent = state.module.geofence
+    ? "Sicherer Bereich: 800 m um die Wohnung"
+    : "Sicherer Bereich ist ausgeschaltet – bewusst, für die Selbstständigkeit.";
+
+  if(state.alarm === "weglauf"){
+    person.setAttribute("transform","translate(246,52)");
+    person.querySelectorAll("circle").forEach(c => c.setAttribute("fill","var(--alarm)"));
+    person.querySelector("circle").setAttribute("fill-opacity",".22");
+    $("#loc-chip").className = "chip alarm";
+    $("#loc-chip").textContent = "Außerhalb · 1,4 km";
+    $("#loc-time").textContent = "vor 1 Minute";
+    $("#loc-mode").textContent = "aktiv (Notfall)";
+  } else {
+    person.setAttribute("transform","translate(104,126)");
+    person.querySelectorAll("circle").forEach(c => c.setAttribute("fill","var(--ok)"));
+    person.querySelector("circle").setAttribute("fill-opacity",".22");
+    $("#loc-chip").className = "chip ok";
+    $("#loc-chip").textContent = "Zuhause";
+    $("#loc-time").textContent = "gerade eben";
+    $("#loc-mode").textContent = state.module.live
+      ? (state.stufe === 3 ? "dauerhaft" : "situativ")
+      : "nur im Notfall";
+  }
+}
+
+let uhrProblem = null;   // null | "laden" | "nicht_getragen"
+
+function zeichneUhr(){
+  const note = $("#watch-note");
+  if(uhrProblem === "laden"){
+    $("#watch-chip").className = "chip warn";
+    $("#watch-chip").textContent = "Akku niedrig";
+    $("#watch-batt").textContent = "14 %";
+    $("#watch-charge").textContent = "vorgestern, 21:50 Uhr";
+    note.classList.remove("hidden");
+    note.textContent = "Die Uhr lag gestern Abend nicht auf der Ladestation. Bei 14 % reicht der Akku noch etwa 5 Stunden. "
+      + state.name + " hat um 22:30 Uhr eine leise Erinnerung bekommen – ohne Reaktion.";
+  } else if(uhrProblem === "nicht_getragen"){
+    $("#watch-chip").className = "chip warn";
+    $("#watch-chip").textContent = "Nicht angelegt";
+    note.classList.remove("hidden");
+    note.textContent = "Die Uhr wird seit 9:00 Uhr nicht getragen. Sie liegt vermutlich noch auf der Ladestation im Schlafzimmer.";
+  } else {
+    $("#watch-chip").className = "chip ok";
+    $("#watch-chip").textContent = "Wird getragen";
+    $("#watch-batt").textContent = "78 %";
+    $("#watch-charge").textContent = "gestern, 22:15 Uhr";
+    note.classList.add("hidden");
+  }
+}
+
+function zeichneTermine(){
+  const box = $("#appt-list"); box.innerHTML = "";
+  $("#appt-chip").textContent = TERMINE.length + " Termine";
+  TERMINE.forEach(t => {
+    const chip = t.status === "quittiert"
+      ? '<span class="chip ok tiny">bestätigt</span>'
+      : '<span class="chip tiny">Erinnerung um 14:40</span>';
+    const d = document.createElement("div");
+    d.className = "kv";
+    d.innerHTML = '<span class="k"><strong style="color:var(--ink)">' + t.zeit + '</strong> &nbsp;' + t.titel +
+                  '<br><span class="tiny" style="color:var(--ink-3)">' + t.ort + '</span></span>' +
+                  '<span class="v">' + chip + '</span>';
+    box.appendChild(d);
+  });
+}
+
+function zeichneMedikamente(){
+  const box = $("#med-list"); box.innerHTML = "";
+  if(!state.module.medikamente){
+    box.innerHTML = '<p class="small muted" style="padding:8px 0">Dieses Modul ist ausgeschaltet.</p>';
+    $("#med-chip").className = "chip off";
+    $("#med-chip").textContent = "aus";
+    $("#med-escalation").classList.add("hidden");
+    return;
+  }
+
+  MEDIKAMENTE.forEach(m => {
+    let chip = '<span class="chip ok tiny">genommen</span>';
+    if(m.status === "offen"){
+      chip = state.medEskalationStufe > 0
+        ? '<span class="chip alarm tiny">nicht bestätigt</span>'
+        : '<span class="chip tiny">geplant</span>';
+    }
+    const d = document.createElement("div");
+    d.className = "kv";
+    d.innerHTML = '<span class="k"><strong style="color:var(--ink)">' + m.zeit + '</strong> &nbsp;' + m.titel + '</span>' +
+                  '<span class="v">' + chip + '</span>';
+    box.appendChild(d);
+  });
+
+  if(state.medEskalationStufe > 0){
+    $("#med-chip").className = "chip alarm";
+    $("#med-chip").textContent = "1 offen";
+    $("#med-escalation").classList.remove("hidden");
+    zeichneEskalation();
+  } else {
+    $("#med-chip").className = "chip ok";
+    $("#med-chip").textContent = "Nach Plan";
+    $("#med-escalation").classList.add("hidden");
+  }
+}
+
+const ESKALATION = [
+  { t:"18:00", s:"Erinnerung auf der Uhr", d:"Sanfter Ton, Vibration, großer Bestätigungsknopf." },
+  { t:"18:10", s:"Zweite Erinnerung",      d:"Deutlicher, mit gesprochenem Hinweis." },
+  { t:"18:20", s:"Nachricht an Sie",       d:"Push auf Ihr Handy – bis hierher wurden Sie nicht gestört." },
+  { t:"18:30", s:"Nachricht an Lena",      d:"Zweitkontakt wird informiert, falls Sie nicht reagieren." },
+  { t:"18:40", s:"Automatischer Anruf",    d:"Nur wenn von Ihnen freigegeben." }
+];
+
+function zeichneEskalation(){
+  const ul = $("#med-timeline"); ul.innerHTML = "";
+  ESKALATION.forEach((e,i) => {
+    const zustand = i < state.medEskalationStufe - 1 ? "done"
+                  : (i === state.medEskalationStufe - 1 ? "active" : "pending");
+    const li = document.createElement("li");
+    li.className = zustand;
+    li.innerHTML = '<span class="bullet"></span>' +
+      '<div><strong>' + e.s + '</strong><div class="when">' + e.t + ' · ' + e.d + '</div></div>';
+    ul.appendChild(li);
+  });
+}
+
+function zeichneWissen(){
+  const box = $("#know-cards"); box.innerHTML = "";
+  const karten = state.wissenNeu ? [state.wissenNeu].concat(WISSEN.slice(0,3)) : WISSEN;
+  karten.forEach((k,i) => {
+    const a = document.createElement("article");
+    if(state.wissenNeu && i === 0) a.className = "fresh";
+    a.innerHTML = '<div class="tag">' + k.tag + '</div><h4>' + k.titel + '</h4><p>' + k.text + '</p>';
+    box.appendChild(a);
+  });
+}
+
+function zeichneHilfe(){
+  const box = $("#help-list"); box.innerHTML = "";
+  HILFE.forEach(h => {
+    const d = document.createElement("div");
+    d.className = "kv";
+    d.innerHTML = '<span class="k"><strong style="color:var(--ink)">' + h.name + '</strong>' +
+                  '<br><span class="tiny" style="color:var(--ink-3)">' + h.art + '</span></span>' +
+                  '<span class="v small muted">' + h.weg + '</span>';
+    box.appendChild(d);
+  });
+}
+
+function zeichneBelastung(){
+  const box = $("#burden-box");
+  const hoch = state.belastung >= 7;
+  box.innerHTML =
+    '<div class="spread"><span class="small muted">Ihre letzte Angabe</span>' +
+    '<span class="chip ' + (hoch ? "warn" : "ok") + '">' + state.belastung + ' von 10</span></div>' +
+    '<div style="height:8px; background:var(--line-soft); border-radius:999px; margin:12px 0 10px; overflow:hidden">' +
+      '<div style="height:100%; width:' + state.belastung*10 + '%; border-radius:999px; background:' +
+      (hoch ? "var(--warn)" : "var(--ok)") + '"></div></div>' +
+    '<p class="small muted">' + (hoch
+      ? "Das ist viel. Verhinderungspflege und Betreuungsgruppen kosten Sie mit Pflegegrad meist nichts – oben in der Liste sind zwei Angebote in Ihrer Nähe."
+      : "Wir fragen alle drei Monate erneut nach. Wenn der Wert steigt, melden wir uns mit passenden Entlastungsangeboten.") + '</p>' +
+    '<p class="tiny muted" style="margin-top:8px">Selbsteinschätzung, keine Diagnose.</p>';
+}
+
+const FAMILIE = [
+  { name:"Sie", rolle:"Hauptverantwortlich", rechte:"Alle Meldungen, alle Einstellungen" },
+  { name:"Lena (Tochter)", rolle:"Zweitkontakt", rechte:"Alarme und Standort im Notfall" },
+  { name:"Thomas (Sohn)", rolle:"Mitleser", rechte:"Termine und Wochenübersicht" },
+  { name:"Pflegedienst Nord", rolle:"Professionell", rechte:"Medikamentenplan, Dokumentation" }
+];
+
+function zeichneFamilie(){
+  const box = $("#family-list"); box.innerHTML = "";
+  const liste = state.flags.has("pflegedienst") ? FAMILIE
+              : state.flags.has("familie") ? FAMILIE.slice(0,3) : FAMILIE.slice(0,2);
+  liste.forEach(f => {
+    const d = document.createElement("div");
+    d.className = "mod-item";
+    d.innerHTML = '<div><div class="name">' + f.name + '</div><div class="why">' + f.rechte + '</div></div>' +
+                  '<span class="chip">' + f.rolle + '</span>';
+    box.appendChild(d);
+  });
+}
+
+function zeichneEreignisse(){
+  const box = $("#event-list"); if(!box) return;
+  box.innerHTML = "";
+  if(state.ereignisse.length === 0){
+    box.innerHTML = '<p class="small muted" style="padding:6px 0">Heute noch nichts Auffälliges.</p>';
+    return;
+  }
+  state.ereignisse.slice(0,10).forEach(e => {
+    const farbe = e.art === "alarm" ? "var(--alarm)" : e.art === "warn" ? "var(--warn)" : "var(--ink-3)";
+    const d = document.createElement("div");
+    d.className = "evt";
+    d.innerHTML = '<span class="t">' + e.zeit + '</span>' +
+                  '<span class="row" style="gap:9px; align-items:flex-start">' +
+                  '<span class="dot" style="color:' + farbe + '; margin-top:7px"></span>' +
+                  '<span>' + e.text + '</span></span>';
+    box.appendChild(d);
+  });
+}
+
+/* ============================================================
+   TEIL 7 – Simulierte Ereignisse für die Vorführung
+   ============================================================ */
+
+let medTimer = null;
+
+function simuliere(art){
+  if(art === "weglauf"){
+    if(!state.module.geofence){
+      toast("Der sichere Bereich ist ausgeschaltet – schalten Sie ihn unter „Ihre Module“ ein.");
+      return;
+    }
+    state.alarm = "weglauf";
+    state.wissenNeu = WISSEN_WEGLAUF;
+    ereignis(state.name + " hat den sicheren Bereich verlassen – Notfallprotokoll bereit.", "alarm");
+    aktualisiereDashboard();
+    oeffneNotfall();
+  }
+
+  if(art === "medikament"){
+    if(!state.module.medikamente){
+      toast("Die Medikamenten-Erinnerung ist ausgeschaltet.");
+      return;
+    }
+    clearInterval(medTimer);
+    state.medEskalationStufe = 1;
+    ereignis("Medikamenten-Erinnerung 18:00 Uhr nicht bestätigt – Eskalation gestartet.", "warn");
+    aktualisiereDashboard();
+    // Kette läuft im Zeitraffer weiter
+    medTimer = setInterval(() => {
+      if(state.medEskalationStufe >= ESKALATION.length){ clearInterval(medTimer); return; }
+      state.medEskalationStufe++;
+      const schritt = ESKALATION[state.medEskalationStufe-1];
+      ereignis("Eskalation: " + schritt.s, "warn");
+      aktualisiereDashboard();
+    }, 2200);
+  }
+
+  if(art === "uhr"){
+    uhrProblem = uhrProblem === "laden" ? "nicht_getragen" : "laden";
+    ereignis(uhrProblem === "laden"
+      ? "Uhr lag um 22:30 Uhr nicht auf der Ladestation."
+      : "Uhr seit 9:00 Uhr nicht angelegt.", "warn");
+    aktualisiereDashboard();
+  }
+
+  if(art === "sturz"){
+    if(!state.module.sturz){
+      toast("Die Sturzerkennung ist ausgeschaltet – Sie finden sie unter „Ihre Module“.");
+      return;
+    }
+    state.alarm = "sturz";
+    ereignis("Möglicher Sturz erkannt, keine Reaktion auf der Uhr.", "alarm");
+    aktualisiereDashboard();
+  }
+
+  if(art === "empfehlung"){
+    if(state.stufe >= 3){ toast("Stufe 3 ist bereits die höchste Stufe."); return; }
+    $("#db-rec").classList.remove("hidden");
+    $("#db-rec-title").textContent = "Wir empfehlen Stufe " + (state.stufe+1) + ": " + STUFEN[state.stufe].name;
+    $("#db-rec-text").textContent =
+      "In den letzten vier Wochen wurden 6 von 18 Erinnerungen nicht bestätigt, und " + state.name +
+      " war dreimal nachts unterwegs. Das sind typische Anzeichen dafür, dass mehr Unterstützung guttut. "
+      + "Sie entscheiden – es wird nichts automatisch umgestellt.";
+    window.scrollTo({ top:0, behavior:"smooth" });
+  }
+
+  if(art === "reset"){
+    clearInterval(medTimer);
+    state.alarm = null;
+    state.medEskalationStufe = 0;
+    state.wissenNeu = null;
+    uhrProblem = null;
+    state.ereignisse = [];
+    $("#db-rec").classList.add("hidden");
+    $("#emergency").classList.add("hidden");
+    aktualisiereDashboard();
+    toast("Demo zurückgesetzt.");
+  }
+}
+
+/* ---------- Notfallprotokoll ---------- */
+
+function oeffneNotfall(){
+  const ul = $("#em-check"); ul.innerHTML = "";
+  SUCHORTE.forEach((o,i) => {
+    const li = document.createElement("li");
+    li.innerHTML = '<input type="checkbox" id="so' + i + '">' +
+      '<label for="so' + i + '"><span class="place">' + o.ort + '</span>' +
+      '<span class="note" style="display:block">' + o.note + '</span></label>';
+    ul.appendChild(li);
+  });
+  $("#em-position").textContent = "Ostpreußenstraße, ca. 1,4 km nordöstlich – zuletzt vor 1 Minute gesehen";
+  $("#emergency").classList.remove("hidden");
+}
+
+/* ============================================================
+   TEIL 8 – Knöpfe verbinden
+   ============================================================ */
+
+$("#btn-start").onclick = () => { zeigeBildschirm("screen-onboarding"); zeigeFrage(); };
+$("#ob-back").onclick   = zurueck;
+
+$("#btn-to-dashboard").onclick = () => {
+  aktualisiereDashboard();
+  ereignis("Einrichtung abgeschlossen – Stufe " + state.stufe + " aktiv.", "info");
+  zeigeBildschirm("screen-dashboard");
+};
+
+$("#btn-restart").onclick = () => {
+  state.frageIndex = 0; state.antworten = {}; state.flags = new Set();
+  state.name = "Anna"; state.belastung = 5; state.ereignisse = [];
+  state.alarm = null; state.medEskalationStufe = 0; state.wissenNeu = null;
+  uhrProblem = null; clearInterval(medTimer);
+  $("#emergency").classList.add("hidden");
+  $("#db-rec").classList.add("hidden");
+  zeigeBildschirm("screen-start");
+};
+
+$("#btn-open-emergency").onclick  = oeffneNotfall;
+$("#btn-close-emergency").onclick = () => $("#emergency").classList.add("hidden");
+$("#btn-share-link").onclick = () => toast("Im echten System: Link mit Live-Standort per SMS an Polizei oder Suchhelfer.");
+$("#btn-call").onclick       = () => toast("Im echten System: Anruf auf die Uhr, Freisprechen aktiviert.");
+$("#btn-report").onclick     = () => toast("Im echten System: PDF mit Verlaufskurve für den Arzttermin.");
+$("#btn-plz").onclick        = () => toast("Im echten System: Angebote aus der Datenbank für PLZ " + $("#plz").value + ".");
+
+$("#btn-rec-accept").onclick = () => {
+  state.stufe = Math.min(3, state.stufe + 1);
+  MODULE.forEach(m => { if(!m.immerAn) state.module[m.id] = m.stufen[state.stufe-1]; });
+  $("#db-rec").classList.add("hidden");
+  ereignis("Unterstützungsprofil auf Stufe " + state.stufe + " gewechselt.", "info");
+  aktualisiereDashboard();
+  toast("Stufe " + state.stufe + " ist aktiv. Sie können jedes Modul einzeln nachjustieren.");
+};
+$("#btn-rec-dismiss").onclick = () => {
+  $("#db-rec").classList.add("hidden");
+  toast("Wir fragen in vier Wochen noch einmal nach.");
+};
+
+$$("[data-sim]").forEach(b => b.onclick = () => simuliere(b.dataset.sim));
+
+$("#emergency").addEventListener("click", e => {
+  if(e.target.id === "emergency") $("#emergency").classList.add("hidden");
+});
+</script>
+</body>
+</html>
