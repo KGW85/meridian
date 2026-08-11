@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MERIDIAN – Prototyp</title>
+<title>Boje – Sicher verbunden.</title>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="%232F6B5F"/><path d="M 6 41 Q 19 34 32 41 T 58 41" fill="none" stroke="%23E8B54D" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="36" r="7" fill="%23E8B54D"/><circle cx="32" cy="32" r="25" fill="none" stroke="%23fff" stroke-width="5"/></svg>'>
 <style>
 /* ============================================================
-   MERIDIAN – Klick-Prototyp (Phase 0)
+   Boje – Klick-Prototyp (Phase 0)
    Alles in einer Datei: Design, Inhalte und Logik.
    Keine Installation, kein Internet nötig.
    ============================================================ */
@@ -364,8 +365,11 @@ textarea:focus{outline:none; border-color:var(--accent)}
 <header class="top">
   <div class="inner">
     <div class="logo">
-      <span class="mark">M</span>
-      <span>MERIDIAN</span>
+      <span class="mark"><svg width="19" height="19" viewBox="0 0 64 64"><defs><clipPath id="lgm"><circle cx="32" cy="32" r="29"/></clipPath></defs><path d="M 2 41 Q 17 34 32 41 T 62 41" fill="none" stroke="#E8B54D" stroke-width="6" stroke-linecap="round" clip-path="url(#lgm)"/><circle cx="32" cy="36" r="8" fill="#E8B54D"/><circle cx="32" cy="32" r="27" fill="none" stroke="#fff" stroke-width="6"/></svg></span>
+      <span style="display:flex; flex-direction:column; line-height:1.15">
+        <span>Boje</span>
+        <span style="font-size:11px; color:var(--accent); font-weight:600">Sicher verbunden.</span>
+      </span>
       <span class="badge-proto">Prototyp</span>
     </div>
     <div class="row">
@@ -587,6 +591,26 @@ textarea:focus{outline:none; border-color:var(--accent)}
       </div>
     </div>
 
+    <!-- Handgelenk-Demo -->
+    <div class="card" id="card-wrist">
+      <div class="spread">
+        <h3>Am Handgelenk erleben</h3>
+        <span class="chip off" id="wrist-chip">nicht verbunden</span>
+      </div>
+      <p class="sub">Verbinden Sie eine echte Uhr: Die Demo-Alarme unten werden dann als echte Mitteilung an Ihr Handy geschickt – und vibrieren auf der gekoppelten Smartwatch.</p>
+      <ol class="small muted" style="margin:12px 0 4px; padding-left:20px; line-height:1.7">
+        <li>Gratis-App <strong>ntfy</strong> auf dem Handy installieren (App Store / Play Store)</li>
+        <li>Dort einen Kanal abonnieren, z. B. <em>meridian-demo-ihrname</em></li>
+        <li>Denselben Kanalnamen hier eintragen:</li>
+      </ol>
+      <div class="row" style="gap:8px; flex-wrap:wrap; margin-top:8px">
+        <input type="text" id="wrist-topic" placeholder="Kanalname aus der ntfy-App" style="max-width:280px">
+        <button class="btn sm primary" id="btn-wrist-save">Verbinden</button>
+        <button class="btn sm" id="btn-wrist-test" disabled>Test-Vibration senden</button>
+      </div>
+      <p class="tiny muted" style="margin-top:8px">Hinweis: Demo-Funktion über den offenen Dienst ntfy.sh – bitte einen nicht erratbaren Kanalnamen wählen und keine echten Personendaten senden.</p>
+    </div>
+
     <!-- Module -->
     <div class="card">
       <div class="spread">
@@ -633,7 +657,7 @@ textarea:focus{outline:none; border-color:var(--accent)}
     <!-- Feedback -->
     <div class="card" id="card-feedback">
       <h3>Ihre Meinung zählt</h3>
-      <p class="sub">Drei kurze Fragen – Ihre Antworten helfen, MERIDIAN besser zu machen.</p>
+      <p class="sub">Drei kurze Fragen – Ihre Antworten helfen, Boje besser zu machen.</p>
 
       <div class="fb-q" data-fbq="verstaendlich">
         <div class="q">War alles verständlich, was Sie hier gesehen haben?</div>
@@ -675,7 +699,7 @@ textarea:focus{outline:none; border-color:var(--accent)}
   </div>
 
   <p class="footnote">
-    MERIDIAN unterstützt – es ersetzt keine Aufsicht und stellt keine Diagnosen.<br>
+    Boje unterstützt – es ersetzt keine Aufsicht und stellt keine Diagnosen.<br>
     Prototyp mit Beispieldaten, Stand August 2026.<br>
     <a href="pitch.html">Für Investoren</a> &nbsp;·&nbsp; <a href="cockpit.html">Für Pflegeeinrichtungen</a>
   </p>
@@ -1679,6 +1703,66 @@ $$("[data-ws]").forEach(b => b.onclick = () => zeigeWatch(b.dataset.ws));
 zeigeWatch("start");
 
 /* ============================================================
+   TEIL 9b – Handgelenk-Demo (echte Push-Mitteilungen via ntfy)
+   Handy bekommt die Mitteilung, die gekoppelte Smartwatch
+   (Apple Watch, Amazfit u. a.) vibriert mit.
+   ============================================================ */
+
+function wristTopic(){ return localStorage.getItem("meridianNtfy") || ""; }
+
+function zeichneWrist(){
+  const verbunden = !!wristTopic();
+  $("#wrist-chip").className = "chip " + (verbunden ? "ok" : "off");
+  $("#wrist-chip").textContent = verbunden ? "verbunden" : "nicht verbunden";
+  $("#wrist-topic").value = wristTopic();
+  $("#btn-wrist-test").disabled = !verbunden;
+}
+
+function pushAnUhr(titel, text, prio){
+  const topic = wristTopic(); if(!topic) return;
+  fetch("https://ntfy.sh", {
+    method: "POST",
+    body: JSON.stringify({ topic: topic, title: titel, message: text,
+                           priority: prio || 3, tags: ["watch"] })
+  }).catch(() => toast("Mitteilung konnte nicht gesendet werden – Internetverbindung prüfen."));
+}
+
+$("#btn-wrist-save").onclick = () => {
+  const t = $("#wrist-topic").value.trim();
+  localStorage.setItem("meridianNtfy", t);
+  zeichneWrist();
+  if(t){
+    pushAnUhr("Boje verbunden", "Ab jetzt spüren Sie die Demo-Alarme am Handgelenk.");
+    toast("Verbunden – gleich sollte Ihr Handy eine Mitteilung zeigen.");
+  } else {
+    toast("Verbindung getrennt.");
+  }
+};
+$("#btn-wrist-test").onclick = () =>
+  pushAnUhr("Boje Testmeldung", "So fühlt sich eine Erinnerung am Handgelenk an.", 3);
+
+zeichneWrist();
+
+/* Demo-Alarme zusätzlich als echte Mitteilung senden */
+const _simuliereOriginal = simuliere;
+simuliere = function(art){
+  _simuliereOriginal(art);
+  if(art === "weglauf" && state.module.geofence)
+    pushAnUhr("⚠️ " + state.name + " hat den sicheren Bereich verlassen",
+      "Letzte Position: Ostpreußenstraße, 1,4 km nordöstlich. Notfallprotokoll ist bereit.", 5);
+  if(art === "medikament" && state.module.medikamente)
+    pushAnUhr("Medikament nicht bestätigt",
+      state.name + " hat die 18-Uhr-Erinnerung nicht quittiert. Eskalationskette läuft.", 4);
+  if(art === "sturz" && state.module.sturz)
+    pushAnUhr("⚠️ Möglicher Sturz erkannt",
+      "Harter Aufprall, danach wenig Bewegung. " + state.name + " reagiert nicht auf die Uhr.", 5);
+  if(art === "uhr")
+    pushAnUhr("Hinweis zur Uhr",
+      "Die Uhr wurde nicht geladen bzw. nicht angelegt.", 3);
+};
+$$("[data-sim]").forEach(b => b.onclick = () => simuliere(b.dataset.sim));
+
+/* ============================================================
    TEIL 10 – Feedback (öffnet E-Mail mit den Antworten)
    ============================================================ */
 
@@ -1695,12 +1779,12 @@ $$(".fb-q[data-fbq]").forEach(q => {
 
 $("#btn-fb-send").onclick = () => {
   const body =
-    "Mein Feedback zum MERIDIAN-Prototyp:%0D%0A%0D%0A" +
+    "Mein Feedback zum Boje-Prototyp:%0D%0A%0D%0A" +
     "Verstaendlich: " + (fbAntworten.verstaendlich || "-") + "%0D%0A" +
     "Wuerde helfen: " + (fbAntworten.nutzen || "-") + "%0D%0A" +
     "Wert pro Monat: " + (fbAntworten.preis || "-") + "%0D%0A%0D%0A" +
     "Anmerkungen:%0D%0A" + encodeURIComponent($("#fb-text").value || "-");
-  window.location.href = "mailto:kgw85@icloud.com?subject=Feedback%20MERIDIAN-Prototyp&body=" + body;
+  window.location.href = "mailto:kgw85@icloud.com?subject=Feedback%20Boje-Prototyp&body=" + body;
 };
 
 $("#emergency").addEventListener("click", e => {
