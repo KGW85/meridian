@@ -1922,6 +1922,12 @@ body.tour-modus .footnote{display:none}
 (function(){
   if(window.location.search.indexOf("test=1") === -1) return;
 
+  // Startseite ans 2-Minuten-Versprechen der Testseite angleichen
+  var startKnopf = document.getElementById("btn-start");
+  if(startKnopf) startKnopf.textContent = "Los geht’s – dauert nur 2 Minuten";
+  var startFuss = document.querySelector("#screen-start .footnote");
+  if(startFuss) startFuss.innerHTML = "Demonstrationsversion mit Beispieldaten. Keine echten Personen, keine echte Ortung.";
+
   var TALLY = "https://tally.so/r/RGeVB9";
   var STATIONEN = [
     { titel:"1 · Sicherheit auf einen Blick",
