@@ -2005,9 +2005,29 @@ body.tour-modus .footnote{display:none}
       var p = document.createElement("span"); p.className = "punkt"; punkte.appendChild(p);
     });
 
-    document.getElementById("tour-zurueck").onclick = function(){ if(aktuell > 0){ aktuell--; zeigeStation(); } };
-    document.getElementById("tour-weiter").onclick = function(){ if(aktuell < STATIONEN.length - 1){ aktuell++; zeigeStation(); } };
+    document.getElementById("tour-zurueck").onclick = function(){ if(aktuell > 0) history.back(); };
+    document.getElementById("tour-weiter").onclick = function(){
+      if(aktuell < STATIONEN.length - 1){
+        aktuell++;
+        history.pushState({ tour: aktuell }, "");
+        zeigeStation();
+      }
+    };
   }
+
+  // Browser-/Handy-Zurück soll nur eine Tour-Seite zurückgehen, nicht alles neu starten
+  window.addEventListener("popstate", function(e){
+    if(!document.body.classList.contains("tour-modus")) return;
+    if(e.state && typeof e.state.tour === "number"){
+      aktuell = e.state.tour;
+      zeigeStation();
+    } else {
+      // weiter zurück als Seite 1 geht nicht – sanft dort festhalten
+      aktuell = 0;
+      history.pushState({ tour: 0 }, "");
+      zeigeStation();
+    }
+  });
 
   function zeigeStation(){
     var s = STATIONEN[aktuell];
@@ -2043,7 +2063,11 @@ body.tour-modus .footnote{display:none}
     document.body.classList.toggle("tour-modus", istDashboard);
     document.getElementById("tour-nav").style.display = istDashboard ? "" : "none";
     document.getElementById("demobar").classList.add("hidden");
-    if(istDashboard){ aktuell = 0; zeigeStation(); }
+    if(istDashboard){
+      aktuell = 0;
+      history.replaceState({ tour: 0 }, "");
+      zeigeStation();
+    }
   };
 })();
 </script>
