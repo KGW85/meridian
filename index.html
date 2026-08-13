@@ -743,7 +743,7 @@ textarea:focus{outline:none; border-color:var(--accent)}
       <div class="spread">
         <div>
           <div style="font-size:12px; letter-spacing:.08em; text-transform:uppercase; opacity:.85; font-weight:700">Notfallprotokoll</div>
-          <h2 style="margin-top:3px">Anna hat den sicheren Bereich verlassen</h2>
+          <h2 style="margin-top:3px" id="em-titel">Anna hat den sicheren Bereich verlassen</h2>
         </div>
         <button class="btn sm ghost" id="btn-close-emergency" style="background:rgba(255,255,255,.16); border-color:transparent; color:#fff">Schließen</button>
       </div>
@@ -760,7 +760,7 @@ textarea:focus{outline:none; border-color:var(--accent)}
         </div>
         <div class="card" style="box-shadow:none">
           <h3 style="font-size:15px">Personenbeschreibung</h3>
-          <p class="small muted">Anna, 78 Jahre, ca. 1,62 m, weißes Haar, blauer Mantel, geht langsam mit Stock. Reagiert auf Ansprache, wirkt oft freundlich, kann Adresse nicht nennen.</p>
+          <p class="small muted" id="em-person">Anna, 78 Jahre, ca. 1,62 m, weißes Haar, blauer Mantel, geht langsam mit Stock. Reagiert auf Ansprache, wirkt oft freundlich, kann Adresse nicht nennen.</p>
           <p class="tiny muted" style="margin-top:8px">Für Polizei und Suchhelfer vorbereitet.</p>
         </div>
       </div>
@@ -1598,12 +1598,14 @@ function simuliere(art){
 /* ---------- Notfallprotokoll ---------- */
 
 function oeffneNotfall(){
+  $("#em-titel").textContent = state.name + " hat den sicheren Bereich verlassen";
+  $("#em-person").textContent = state.name + ", 78 Jahre, ca. 1,62 m, weißes Haar, blauer Mantel, geht langsam mit Stock. Reagiert auf Ansprache, wirkt oft freundlich, kann Adresse nicht nennen.";
   const ul = $("#em-check"); ul.innerHTML = "";
   SUCHORTE.forEach((o,i) => {
     const li = document.createElement("li");
     li.innerHTML = '<input type="checkbox" id="so' + i + '">' +
       '<label for="so' + i + '"><span class="place">' + o.ort + '</span>' +
-      '<span class="note" style="display:block">' + o.note + '</span></label>';
+      '<span class="note" style="display:block">' + o.note.replace("Anna", state.name) + '</span></label>';
     ul.appendChild(li);
   });
   $("#em-position").textContent = "Ostpreußenstraße, ca. 1,4 km nordöstlich – zuletzt vor 1 Minute gesehen";
@@ -1707,7 +1709,7 @@ const WATCH_SZENEN = {
     note: "Stufe 3: Die Uhr verlangt nichts mehr. Bei einem Alarm bleibt sie still oder spricht mit vertrauter Stimme – alle Meldungen laufen nur noch bei Ihnen auf.",
     html: function(){
       return '<div style="font-size:30px">🕊️</div>' +
-             '<div class="ws-line" style="font-size:14px">„Bleib einfach stehen,<br>wo du bist.<br>Anna ist unterwegs zu dir.“</div>' +
+             '<div class="ws-line" style="font-size:14px">„Bleib einfach stehen,<br>wo du bist.<br>Lena ist unterwegs zu dir.“</div>' +
              '<div class="ws-tag" style="margin-top:4px">Vertraute Stimme · Lena</div>';
     }
   }
@@ -1975,8 +1977,14 @@ body.tour-modus .footnote{display:none}
     alarm.className = "card";
     alarm.style.borderColor = "var(--danger, #c0392b)";
     alarm.innerHTML = '<h3>Der Ernstfall – trau dich</h3>' +
-      '<p class="sub">Anna verlässt den sicheren Bereich. Was passiert dann? Genau dafür gibt es Boje.</p>' +
-      '<button class="btn danger" id="tour-btn-alarm" style="margin-top:12px; width:100%">🚨 Weglauf-Alarm auslösen</button>';
+      '<p class="sub" id="tour-alarm-sub"></p>' +
+      '<div style="margin-top:12px; display:grid; gap:10px">' +
+        '<div style="display:flex; gap:10px; align-items:flex-start"><span style="font-size:22px; flex:none">⌚</span>' +
+          '<p class="sub" style="margin:0"><strong>Auf der Uhr:</strong> kein schriller Alarm – eine <strong>vertraute Stimme</strong> sagt: „Bleib einfach stehen, ich bin schon unterwegs zu dir.“</p></div>' +
+        '<div style="display:flex; gap:10px; align-items:flex-start"><span style="font-size:22px; flex:none">📱</span>' +
+          '<p class="sub" style="margin:0"><strong>Bei der Familie:</strong> sofort eine Meldung mit letzter Position und fertigem <strong>Notfallprotokoll</strong> – genau das öffnet sich gleich bei dir.</p></div>' +
+      '</div>' +
+      '<button class="btn danger" id="tour-btn-alarm" style="margin-top:14px; width:100%">🚨 Weglauf-Alarm auslösen – nur Demo</button>';
     stack.insertBefore(alarm, intro.nextSibling);
     document.getElementById("tour-btn-alarm").onclick = function(){
       state.module.geofence = true;   // in der Tour soll der Ernstfall immer funktionieren
@@ -2057,8 +2065,8 @@ body.tour-modus .footnote{display:none}
       intro.classList.add("tour-weg");
     }
     if(aktuell === 0){
-      el("tour-alarm-karte").querySelector(".sub").innerHTML =
-        fuelle("<strong>{name} verlässt den sicheren Bereich – was passiert dann?</strong> Genau dafür gibt es Boje. Keine Sorge: Alles hier ist nur Demo.");
+      el("tour-alarm-sub").innerHTML =
+        fuelle("<strong>Stell dir vor: {name} verlässt den sicheren Bereich.</strong> Drück den roten Knopf und sieh, was Boje in diesem Moment tut:");
     }
     document.getElementById("tour-stand").textContent = "Seite " + (aktuell + 1) + " von " + STATIONEN.length;
     var punkte = document.querySelectorAll("#tour-punkte .punkt");
@@ -2066,6 +2074,34 @@ body.tour-modus .footnote{display:none}
     document.getElementById("tour-zurueck").style.visibility = aktuell === 0 ? "hidden" : "visible";
     document.getElementById("tour-weiter").style.display = aktuell === STATIONEN.length - 1 ? "none" : "";
     window.scrollTo({ top:0, behavior:"instant" in window ? "instant" : "auto" });
+    speichereStand();
+  }
+
+  // --- Gedächtnis: Neuladen (Karten-App, Tally, WhatsApp-Browser) wirft nicht mehr an den Anfang ---
+  var MERKER = "bojeTourStand";
+
+  function speichereStand(){
+    try {
+      var kopie = {};
+      Object.keys(state).forEach(function(k){ kopie[k] = state[k]; });
+      kopie.flags = Array.from(state.flags);
+      sessionStorage.setItem(MERKER, JSON.stringify({ state: kopie, seite: aktuell }));
+    } catch(e){}
+  }
+
+  function stelleStandWiederHer(){
+    var alt = null;
+    try { alt = JSON.parse(sessionStorage.getItem(MERKER) || "null"); } catch(e){}
+    if(!alt || !alt.state) return;
+    Object.keys(alt.state).forEach(function(k){
+      if(k === "flags") state.flags = new Set(alt.state.flags || []);
+      else state[k] = alt.state[k];
+    });
+    aktualisiereDashboard();
+    zeigeBildschirm("screen-dashboard");
+    aktuell = Math.min(alt.seite || 0, STATIONEN.length - 1);
+    history.replaceState({ tour: aktuell }, "");
+    zeigeStation();
   }
 
   baueTourElemente();
@@ -2084,6 +2120,15 @@ body.tour-modus .footnote{display:none}
       zeigeStation();
     }
   };
+
+  // „Neu starten“ soll auch das Gedächtnis leeren
+  var restartAlt = document.getElementById("btn-restart").onclick;
+  document.getElementById("btn-restart").onclick = function(){
+    try { sessionStorage.removeItem(MERKER); } catch(e){}
+    restartAlt();
+  };
+
+  stelleStandWiederHer();
 })();
 </script>
 </body>
