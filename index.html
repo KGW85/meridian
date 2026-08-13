@@ -641,7 +641,7 @@ textarea:focus{outline:none; border-color:var(--accent)}
     </div>
 
     <!-- Module -->
-    <div class="card">
+    <div class="card" id="card-module">
       <div class="spread">
         <h3>Ihre Module</h3>
         <span class="chip" id="mod-count"></span>
@@ -651,7 +651,7 @@ textarea:focus{outline:none; border-color:var(--accent)}
     </div>
 
     <!-- Angehörigen-Modul -->
-    <div class="card">
+    <div class="card" id="card-angehoerige">
       <h3>Für Sie als Angehörige:r</h3>
       <p class="sub">Die zweite Hälfte des Produkts: Wissen, Hilfe vor Ort, Ihre eigene Belastung.</p>
 
@@ -670,14 +670,14 @@ textarea:focus{outline:none; border-color:var(--accent)}
     </div>
 
     <!-- Familie -->
-    <div class="card">
+    <div class="card" id="card-familie">
       <h3>Familie &amp; Rollen</h3>
       <p class="sub">Wer sieht was, wer wird wann benachrichtigt.</p>
       <div class="mod-list" id="family-list"></div>
     </div>
 
     <!-- Verlauf -->
-    <div class="card">
+    <div class="card" id="card-verlauf">
       <h3>Verlauf</h3>
       <p class="sub">Was heute passiert ist.</p>
       <div id="event-list" style="margin-top:8px"></div>
@@ -1901,6 +1901,145 @@ $("#btn-fb-send").onclick = () => {
 $("#emergency").addEventListener("click", e => {
   if(e.target.id === "emergency") $("#emergency").classList.add("hidden");
 });
+</script>
+
+<!-- ============ GEFÜHRTE TOUR (nur bei Aufruf aus dem 2-Minuten-Test, ?test=1) ============ -->
+<style>
+.tour-weg{display:none !important}
+body.tour-modus{padding-bottom:96px}
+body.tour-modus .footnote{display:none}
+#tour-intro{background:var(--accent-soft); border:1px solid var(--accent); border-radius:16px; padding:16px 18px; margin-bottom:4px}
+#tour-intro h3{margin:0; font-size:17px}
+#tour-intro p{margin:6px 0 0; font-size:14px; color:var(--ink-2, inherit); opacity:.85}
+#tour-nav{position:fixed; left:0; right:0; bottom:0; z-index:400; background:var(--card); border-top:1px solid var(--line); box-shadow:0 -4px 16px rgba(0,0,0,.08)}
+#tour-nav .inner{max-width:960px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; gap:12px}
+#tour-nav .mitte{flex:1; text-align:center; font-size:14px; opacity:.75}
+#tour-nav .punkte{display:flex; gap:6px; justify-content:center; margin-top:4px}
+#tour-nav .punkt{width:8px; height:8px; border-radius:50%; background:var(--line)}
+#tour-nav .punkt.aktiv{background:var(--accent)}
+</style>
+<script>
+(function(){
+  if(window.location.search.indexOf("test=1") === -1) return;
+
+  var TALLY = "https://tally.so/r/RGeVB9";
+  var STATIONEN = [
+    { titel:"1 · Sicherheit auf einen Blick",
+      text:"Das sieht die Familie zuerst: Wo ist Anna, trägt sie die Uhr, ist alles in Ordnung? Probier unbedingt den roten Knopf hier drunter.",
+      ids:["tour-alarm-karte","db-status","db-rec","card-location","card-watch"] },
+    { titel:"2 · Der Alltag",
+      text:"Termine, Medikamente und vertraute Wege – sanfte Erinnerungen statt Kontrolle.",
+      ids:["card-appointments","card-meds","card-ziele"] },
+    { titel:"3 · Die Uhr am Handgelenk",
+      text:"So sieht Anna ihre Uhr. Drück mal „Bring mich nach Hause“ – und mutige nehmen beim Stimm-Anker die eigene Stimme auf. 🎤",
+      ids:["card-watchsim"] },
+    { titel:"4 · Für die Angehörigen",
+      text:"Die zweite Hälfte von Boje: Module nach Bedarf, Wissen und Hilfe für die, die sich kümmern.",
+      ids:["card-module","card-angehoerige"] },
+    { titel:"5 · Familie & Verlauf",
+      text:"Wer sieht was – und was ist heute passiert.",
+      ids:["card-familie","card-verlauf"] },
+    { titel:"Geschafft! 🎉",
+      text:"",
+      ids:["tour-abschluss"] }
+  ];
+  // Elemente, die in der Tour grundsätzlich wegbleiben (zu technisch für den 2-Minuten-Test)
+  var IMMER_WEG = ["card-wrist","card-feedback"];
+  var ALLE = [];
+  STATIONEN.forEach(function(s){ s.ids.forEach(function(id){ ALLE.push(id); }); });
+
+  var aktuell = 0;
+
+  function el(id){ return document.getElementById(id); }
+
+  function baueTourElemente(){
+    var stack = document.querySelector("#screen-dashboard .stack");
+
+    var intro = document.createElement("div");
+    intro.id = "tour-intro";
+    intro.innerHTML = "<h3></h3><p></p>";
+    stack.insertBefore(intro, stack.firstChild);
+
+    var alarm = document.createElement("div");
+    alarm.id = "tour-alarm-karte";
+    alarm.className = "card";
+    alarm.style.borderColor = "var(--danger, #c0392b)";
+    alarm.innerHTML = '<h3>Der Ernstfall – trau dich</h3>' +
+      '<p class="sub">Anna verlässt den sicheren Bereich. Was passiert dann? Genau dafür gibt es Boje.</p>' +
+      '<button class="btn danger" id="tour-btn-alarm" style="margin-top:12px; width:100%">🚨 Weglauf-Alarm auslösen</button>';
+    stack.insertBefore(alarm, intro.nextSibling);
+    document.getElementById("tour-btn-alarm").onclick = function(){
+      state.module.geofence = true;   // in der Tour soll der Ernstfall immer funktionieren
+      simuliere("weglauf");
+    };
+
+    var ende = document.createElement("div");
+    ende.id = "tour-abschluss";
+    ende.className = "card";
+    ende.style.textAlign = "center";
+    ende.innerHTML = '<div style="font-size:42px; line-height:1">🎉</div>' +
+      '<h3 style="margin-top:10px">Das war der Rundgang!</h3>' +
+      '<p class="sub" style="margin-top:8px">Du hast alles gesehen, was Boje kann. Jetzt kommt der wichtigste Teil –<br>deine ehrliche Meinung. 5 Fragen, komplett anonym, keine Anmeldung.</p>' +
+      '<a class="btn primary" href="' + TALLY + '" target="_blank" rel="noopener" style="margin-top:16px; display:inline-block; padding:14px 28px">Zum Feedback-Bogen (1 Minute)</a>' +
+      '<p class="tiny muted" style="margin-top:10px">Danach kannst du dieses Fenster einfach schließen. Danke dir! 🟢</p>';
+    stack.appendChild(ende);
+
+    var nav = document.createElement("div");
+    nav.id = "tour-nav";
+    nav.innerHTML = '<div class="inner">' +
+      '<button class="btn sm ghost" id="tour-zurueck">Zurück</button>' +
+      '<div class="mitte"><span id="tour-stand"></span><div class="punkte" id="tour-punkte"></div></div>' +
+      '<button class="btn sm primary" id="tour-weiter">Weiter →</button>' +
+      '</div>';
+    nav.style.display = "none";
+    document.body.appendChild(nav);
+
+    var punkte = document.getElementById("tour-punkte");
+    STATIONEN.forEach(function(){
+      var p = document.createElement("span"); p.className = "punkt"; punkte.appendChild(p);
+    });
+
+    document.getElementById("tour-zurueck").onclick = function(){ if(aktuell > 0){ aktuell--; zeigeStation(); } };
+    document.getElementById("tour-weiter").onclick = function(){ if(aktuell < STATIONEN.length - 1){ aktuell++; zeigeStation(); } };
+  }
+
+  function zeigeStation(){
+    var s = STATIONEN[aktuell];
+    ALLE.concat(IMMER_WEG).forEach(function(id){
+      var e = el(id); if(e) e.classList.add("tour-weg");
+    });
+    s.ids.forEach(function(id){
+      var e = el(id); if(e) e.classList.remove("tour-weg");
+    });
+    var intro = el("tour-intro");
+    if(s.text){
+      intro.classList.remove("tour-weg");
+      intro.querySelector("h3").textContent = s.titel;
+      intro.querySelector("p").textContent = s.text;
+    } else {
+      intro.classList.add("tour-weg");
+    }
+    document.getElementById("tour-stand").textContent = "Seite " + (aktuell + 1) + " von " + STATIONEN.length;
+    var punkte = document.querySelectorAll("#tour-punkte .punkt");
+    punkte.forEach(function(p, i){ p.classList.toggle("aktiv", i === aktuell); });
+    document.getElementById("tour-zurueck").style.visibility = aktuell === 0 ? "hidden" : "visible";
+    document.getElementById("tour-weiter").style.display = aktuell === STATIONEN.length - 1 ? "none" : "";
+    window.scrollTo({ top:0, behavior:"instant" in window ? "instant" : "auto" });
+  }
+
+  baueTourElemente();
+
+  // In die Bildschirm-Umschaltung einklinken
+  var originalZeige = zeigeBildschirm;
+  zeigeBildschirm = function(id){
+    originalZeige(id);
+    var istDashboard = id === "screen-dashboard";
+    document.body.classList.toggle("tour-modus", istDashboard);
+    document.getElementById("tour-nav").style.display = istDashboard ? "" : "none";
+    document.getElementById("demobar").classList.add("hidden");
+    if(istDashboard){ aktuell = 0; zeigeStation(); }
+  };
+})();
 </script>
 </body>
 </html>
