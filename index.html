@@ -658,12 +658,14 @@ textarea:focus{outline:none; border-color:var(--accent)}
       <h3 style="font-size:15px; margin-top:18px">Wissens-Kompass</h3>
       <div class="know" id="know-cards" style="margin-top:10px"></div>
 
+      <div id="block-hilfe-naehe">
       <h3 style="font-size:15px; margin-top:22px">Hilfe in Ihrer Nähe</h3>
       <div class="row" style="margin-top:10px; gap:8px">
         <input type="text" id="plz" placeholder="Postleitzahl" value="45127" style="max-width:160px">
         <button class="btn sm" id="btn-plz">Suchen</button>
       </div>
       <div id="help-list" style="margin-top:12px"></div>
+      </div>
 
       <h3 style="font-size:15px; margin-top:22px">Ihr Belastungs-Check</h3>
       <div id="burden-box" style="margin-top:10px"></div>
@@ -1908,9 +1910,10 @@ $("#emergency").addEventListener("click", e => {
 .tour-weg{display:none !important}
 body.tour-modus{padding-bottom:96px}
 body.tour-modus .footnote{display:none}
-#tour-intro{background:var(--accent-soft); border:1px solid var(--accent); border-radius:16px; padding:16px 18px; margin-bottom:4px}
-#tour-intro h3{margin:0; font-size:17px}
-#tour-intro p{margin:6px 0 0; font-size:14px; color:var(--ink-2, inherit); opacity:.85}
+#tour-intro{background:var(--accent-soft); border:1px solid var(--accent); border-radius:16px; padding:18px 20px; margin-bottom:4px}
+#tour-intro h3{margin:0; font-size:20px; font-weight:750; letter-spacing:-.01em}
+#tour-intro p{margin:8px 0 0; font-size:15px; line-height:1.55; opacity:.9}
+#tour-intro strong{font-weight:750}
 #tour-nav{position:fixed; left:0; right:0; bottom:0; z-index:400; background:var(--card); border-top:1px solid var(--line); box-shadow:0 -4px 16px rgba(0,0,0,.08)}
 #tour-nav .inner{max-width:960px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; gap:12px}
 #tour-nav .mitte{flex:1; text-align:center; font-size:14px; opacity:.75}
@@ -1929,28 +1932,29 @@ body.tour-modus .footnote{display:none}
   if(startFuss) startFuss.innerHTML = "Demonstrationsversion mit Beispieldaten. Keine echten Personen, keine echte Ortung.";
 
   var TALLY = "https://tally.so/r/RGeVB9";
+  // {name}, {stufe}, {stufenname} werden beim Anzeigen durch die echten Werte ersetzt
   var STATIONEN = [
-    { titel:"1 · Sicherheit auf einen Blick",
-      text:"Das sieht die Familie zuerst: Wo ist Anna, trägt sie die Uhr, ist alles in Ordnung? Probier unbedingt den roten Knopf hier drunter.",
-      ids:["tour-alarm-karte","db-status","db-rec","card-location","card-watch"] },
-    { titel:"2 · Der Alltag",
-      text:"Termine, Medikamente und vertraute Wege – sanfte Erinnerungen statt Kontrolle.",
+    { titel:"Wo ist {name}? Ist alles gut?",
+      text:"Boje hat <strong>Stufe {stufe} von 3</strong> vorgeschlagen: <strong>{stufenname}</strong>. Diese Übersicht sieht die Familie – <strong>ein Blick genügt.</strong><br>Und jetzt trau dich: <strong>drück den roten Knopf.</strong>",
+      ids:["tour-alarm-karte","db-status","db-rec","card-location"] },
+    { titel:"Der Alltag",
+      text:"<strong>Sanfte Erinnerungen statt Kontrolle:</strong> Termine, Medikamente und die vertrauten Wege.",
       ids:["card-appointments","card-meds","card-ziele"] },
-    { titel:"3 · Die Uhr am Handgelenk",
-      text:"So sieht Anna ihre Uhr. Drück mal „Bring mich nach Hause“ – und mutige nehmen beim Stimm-Anker die eigene Stimme auf. 🎤",
-      ids:["card-watchsim"] },
-    { titel:"4 · Für die Angehörigen",
-      text:"Die zweite Hälfte von Boje: Module nach Bedarf, Wissen und Hilfe für die, die sich kümmern.",
-      ids:["card-module","card-angehoerige"] },
-    { titel:"5 · Familie & Verlauf",
-      text:"Wer sieht was – und was ist heute passiert.",
+    { titel:"Die Uhr am Handgelenk",
+      text:"<strong>Das sieht {name} – mehr nicht.</strong> Drück mal „Bring mich nach Hause“. Mutige nehmen beim Stimm-Anker die eigene Stimme auf. 🎤",
+      ids:["card-watchsim","card-watch"] },
+    { titel:"Für die, die sich kümmern",
+      text:"Boje ist <strong>auch für Sie als Angehörige da</strong>: Wissen in Alltagssprache – und ein ehrlicher Blick auf die <strong>eigene Belastung</strong>.",
+      ids:["card-angehoerige"] },
+    { titel:"Wer sieht was?",
+      text:"<strong>Jedes Familienmitglied bekommt die passende Rolle.</strong> Und darunter: was heute passiert ist.",
       ids:["card-familie","card-verlauf"] },
     { titel:"Geschafft! 🎉",
       text:"",
       ids:["tour-abschluss"] }
   ];
-  // Elemente, die in der Tour grundsätzlich wegbleiben (zu technisch für den 2-Minuten-Test)
-  var IMMER_WEG = ["card-wrist","card-feedback"];
+  // Elemente, die in der Tour grundsätzlich wegbleiben (zu viel für den 2-Minuten-Test)
+  var IMMER_WEG = ["card-wrist","card-feedback","card-module","block-hilfe-naehe"];
   var ALLE = [];
   STATIONEN.forEach(function(s){ s.ids.forEach(function(id){ ALLE.push(id); }); });
 
@@ -2037,13 +2041,24 @@ body.tour-modus .footnote{display:none}
     s.ids.forEach(function(id){
       var e = el(id); if(e) e.classList.remove("tour-weg");
     });
+    function fuelle(text){
+      var stufe = state.stufe || 1;
+      return text
+        .replace(/\{name\}/g, state.name || "Anna")
+        .replace(/\{stufe\}/g, stufe)
+        .replace(/\{stufenname\}/g, (STUFEN[stufe-1] || STUFEN[0]).name);
+    }
     var intro = el("tour-intro");
     if(s.text){
       intro.classList.remove("tour-weg");
-      intro.querySelector("h3").textContent = s.titel;
-      intro.querySelector("p").textContent = s.text;
+      intro.querySelector("h3").innerHTML = fuelle(s.titel);
+      intro.querySelector("p").innerHTML = fuelle(s.text);
     } else {
       intro.classList.add("tour-weg");
+    }
+    if(aktuell === 0){
+      el("tour-alarm-karte").querySelector(".sub").innerHTML =
+        fuelle("<strong>{name} verlässt den sicheren Bereich – was passiert dann?</strong> Genau dafür gibt es Boje. Keine Sorge: Alles hier ist nur Demo.");
     }
     document.getElementById("tour-stand").textContent = "Seite " + (aktuell + 1) + " von " + STATIONEN.length;
     var punkte = document.querySelectorAll("#tour-punkte .punkt");
