@@ -571,6 +571,22 @@ textarea:focus{outline:none; border-color:var(--accent)}
 
     </div>
 
+    <!-- Ziele & vertraute Wege (Vorgeschmack auf den Kundenbereich) -->
+    <div class="card" id="card-ziele">
+      <div class="spread">
+        <h3>Ziele &amp; vertraute Wege</h3>
+        <span class="chip" id="ziele-chip"></span>
+      </div>
+      <p class="sub">Sie pflegen die Orte, das System kennt die Wege: Arzt, Bäcker, Tagespflege. Ändert sich etwas – neuer Hausarzt, neue Adresse – tragen Sie es hier ein, die Uhr weiß sofort Bescheid.</p>
+      <div class="mod-list" id="ziele-liste"></div>
+      <div class="row" style="gap:8px; flex-wrap:wrap; margin-top:14px">
+        <input type="text" id="ziel-name" placeholder="Name, z. B. Dr. Sommer" style="max-width:190px">
+        <input type="text" id="ziel-adresse" placeholder="Adresse" style="max-width:230px">
+        <button class="btn sm primary" id="btn-ziel-add">Hinzufügen</button>
+      </div>
+      <p class="tiny muted" style="margin-top:8px">Demo: wird nur in Ihrem Browser gespeichert. Im echten Boje gepflegt im Familien-Kundenbereich – jederzeit, von überall.</p>
+    </div>
+
     <!-- Watch-Simulation -->
     <div class="card" id="card-watchsim">
       <h3>So sieht es auf der Uhr aus</h3>
@@ -1752,6 +1768,50 @@ $("#btn-voice-rec").onclick = async () => {
 $("#btn-voice-play").onclick = () => { if(voiceURL) new Audio(voiceURL).play(); };
 
 zeigeWatch("start");
+
+/* ============================================================
+   TEIL 9a – Ziele & vertraute Wege (Vorgeschmack Kundenbereich)
+   ============================================================ */
+
+let ZIELE = JSON.parse(localStorage.getItem("bojeZiele") || "null") || [
+  { name: "Frau Dr. Berger (Hausärztin)", adresse: "Kirchstraße 12, Essen" },
+  { name: "Bäckerei Kleff", adresse: "Marktplatz 3, Essen" },
+  { name: "Tagespflege Sonnenhof", adresse: "Gartenweg 8, Essen" }
+];
+
+function zeichneZiele(){
+  const box = $("#ziele-liste"); box.innerHTML = "";
+  $("#ziele-chip").textContent = ZIELE.length + " Ziele";
+  ZIELE.forEach((z, i) => {
+    const row = document.createElement("div");
+    row.className = "mod-item";
+    row.innerHTML =
+      '<div><div class="name">' + z.name + '</div><div class="why">' + z.adresse + '</div></div>' +
+      '<div class="row" style="gap:6px">' +
+      '<a class="btn sm ghost" target="_blank" rel="noopener" href="https://maps.apple.com/?q=' + encodeURIComponent(z.adresse) + '">Karte</a>' +
+      '<button class="btn sm ghost" data-zi="' + i + '" title="Entfernen">✕</button></div>';
+    row.querySelector("[data-zi]").onclick = () => {
+      ZIELE.splice(i, 1);
+      localStorage.setItem("bojeZiele", JSON.stringify(ZIELE));
+      ereignis("Ziel entfernt: " + z.name, "info");
+      zeichneZiele();
+    };
+    box.appendChild(row);
+  });
+}
+
+$("#btn-ziel-add").onclick = () => {
+  const n = $("#ziel-name").value.trim(), a = $("#ziel-adresse").value.trim();
+  if(!n || !a){ toast("Bitte Name und Adresse eintragen."); return; }
+  ZIELE.push({ name: n, adresse: a });
+  localStorage.setItem("bojeZiele", JSON.stringify(ZIELE));
+  $("#ziel-name").value = ""; $("#ziel-adresse").value = "";
+  ereignis("Neues Ziel hinterlegt: " + n + " – die Uhr kennt jetzt den Weg.", "info");
+  zeichneZiele();
+  toast(n + " ist hinterlegt – ab sofort als vertrauter Weg verfügbar.");
+};
+
+zeichneZiele();
 
 /* ============================================================
    TEIL 9b – Handgelenk-Demo (echte Push-Mitteilungen via ntfy)
