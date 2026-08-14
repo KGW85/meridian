@@ -1062,7 +1062,12 @@ function zeigeFrage(){
     box.appendChild(inp);
     const b = document.createElement("button");
     b.className = "btn primary"; b.style.marginTop = "16px"; b.textContent = "Weiter";
-    b.onclick = () => { state.name = inp.value.trim() || "Anna"; weiter(); };
+    b.onclick = () => {
+      const eingabe = inp.value.trim() || "Anna";
+      // Namen immer großschreiben – auch wenn "papa" getippt wurde
+      state.name = eingabe.charAt(0).toUpperCase() + eingabe.slice(1);
+      weiter();
+    };
     inp.addEventListener("keydown", e => { if(e.key === "Enter") b.click(); });
     box.appendChild(b);
     setTimeout(() => inp.focus(), 80);
@@ -1937,7 +1942,7 @@ body.tour-modus .footnote{display:none}
   // {name}, {stufe}, {stufenname} werden beim Anzeigen durch die echten Werte ersetzt
   var STATIONEN = [
     { titel:"Wo ist {name}? Ist alles gut?",
-      text:"Boje hat <strong>Stufe {stufe} von 3</strong> vorgeschlagen: <strong>{stufenname}</strong>. Diese Übersicht sieht die Familie – <strong>ein Blick genügt.</strong><br>Und jetzt trau dich: <strong>drück den roten Knopf.</strong>",
+      text:"Boje hat <strong>Stufe {stufe} von 3</strong> vorgeschlagen: <strong>{stufenname}</strong>. Diese Übersicht sieht die Familie – <strong>ein Blick genügt.</strong><br>Und jetzt trau dich: <strong>Drück den roten Knopf.</strong>",
       ids:["tour-alarm-karte","db-status","db-rec","card-location"] },
     { titel:"Der Alltag",
       text:"<strong>Sanfte Erinnerungen statt Kontrolle:</strong> Termine, Medikamente und die vertrauten Wege.",
@@ -1946,10 +1951,10 @@ body.tour-modus .footnote{display:none}
       text:"<strong>Das sieht {name} – mehr nicht.</strong> Drück mal „Bring mich nach Hause“. Mutige nehmen beim Stimm-Anker die eigene Stimme auf. 🎤",
       ids:["card-watchsim","card-watch"] },
     { titel:"Für die, die sich kümmern",
-      text:"Boje ist <strong>auch für Sie als Angehörige da</strong>: Wissen in Alltagssprache – und ein ehrlicher Blick auf die <strong>eigene Belastung</strong>.",
+      text:"<strong>Das sehen die Angehörigen.</strong> Wissen in Alltagssprache – und ein ehrlicher Blick auf die <strong>eigene Belastung</strong>.",
       ids:["card-angehoerige"] },
     { titel:"Wer sieht was?",
-      text:"<strong>Jedes Familienmitglied bekommt die passende Rolle.</strong> Und darunter: was heute passiert ist.",
+      text:"<strong>Und was sehen weitere Angehörige?</strong> Jedes Familienmitglied bekommt die passende Rolle – und darunter steht, was heute passiert ist.",
       ids:["card-familie","card-verlauf"] },
     { titel:"Geschafft! 🎉",
       text:"",
