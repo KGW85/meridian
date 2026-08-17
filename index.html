@@ -382,10 +382,17 @@ textarea:focus{outline:none; border-color:var(--accent)}
 <!-- ============ 1. STARTBILDSCHIRM ============ -->
 <main id="screen-start" class="wrap">
   <div class="hero">
-    <h1>Der Begleiter, der mitwächst</h1>
+    <h1>Die Uhr, die mit der Demenz mitwächst</h1>
     <p class="lead">
-      Ein Assistenzsystem für Menschen mit Demenz – und für die Angehörigen,
-      die sie begleiten. Es passt sich an, wenn sich die Situation verändert.
+      Wenn Mama sich verläuft, schlägt Boje keinen schrillen Alarm –
+      die Uhr spricht mit <strong>Ihrer Stimme</strong> und führt sie sicher nach Hause.
+      Sie sehen auf dem Handy: alles in Ordnung.
+      Und Mama? <strong>Muss nichts bedienen.</strong> Kein Knopf, keine App, kein Passwort.
+    </p>
+    <p class="lead" style="margin-top:14px">
+      <strong>Probieren Sie es aus:</strong> Beantworten Sie ein paar kurze Fragen zu Ihrem
+      Angehörigen – Boje stellt daraus das passende Schutzpaket zusammen:
+      <strong>Stufe 1, 2 oder 3.</strong>
     </p>
     <button class="btn primary" id="btn-start" style="padding:14px 28px; font-size:18px">
       Einrichtung starten – dauert 5 Minuten
@@ -1174,9 +1181,11 @@ function begruendungen(){
 
 function zeigeErgebnis(){
   const s = STUFEN[state.stufe-1];
-  $("#res-level-num").textContent = "Unterstützungsprofil – Stufe " + s.num;
-  $("#res-level-name").textContent = s.name;
-  $("#res-level-text").textContent = s.text;
+  $("#res-level-num").textContent = "✓ Ihre Antworten sind ausgewertet";
+  $("#res-level-name").textContent = "Stufe " + s.num + " von 3 – " + s.name;
+  $("#res-level-text").textContent =
+    "Diese Stufe hat Boje jetzt für " + state.name + " freigeschaltet. " + s.text;
+  $("#btn-to-dashboard").textContent = "So sieht Boje für " + state.name + " aus →";
 
   const rb = $("#res-reasons"); rb.innerHTML = "";
   begruendungen().forEach(t => {
