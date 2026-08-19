@@ -594,7 +594,7 @@ textarea:focus{outline:none; border-color:var(--accent)}
     <!-- Watch-Simulation -->
     <div class="card" id="card-watchsim">
       <h3>So sieht es auf der Uhr aus</h3>
-      <p class="sub">Die Seite Ihres Angehörigen: bewusst groß, ruhig und mit höchstens einem Knopf. Klicken Sie sich durch die Situationen.</p>
+      <p class="sub">So einfach sieht die Uhr für den erkrankten Menschen aus: groß, ruhig, höchstens ein Knopf. Klicken Sie sich durch die Situationen.</p>
       <div class="watchsim">
         <div class="watch">
           <div class="watch-band top"></div>
@@ -656,8 +656,8 @@ textarea:focus{outline:none; border-color:var(--accent)}
 
     <!-- Angehörigen-Modul -->
     <div class="card" id="card-angehoerige">
-      <h3>Für Sie als Angehörige:r</h3>
-      <p class="sub">Die zweite Hälfte des Produkts: Wissen, Hilfe vor Ort, Ihre eigene Belastung.</p>
+      <h3>Für Sie als Familie</h3>
+      <p class="sub">Boje hilft auch Ihnen: verständliches Wissen für den Alltag – und ein ehrlicher Blick darauf, wie es Ihnen selbst geht.</p>
 
       <h3 style="font-size:15px; margin-top:18px">Wissens-Kompass</h3>
       <div class="know" id="know-cards" style="margin-top:10px"></div>
@@ -1936,13 +1936,17 @@ body.tour-modus .footnote{display:none}
 </style>
 <script>
 (function(){
-  if(window.location.search.indexOf("test=1") === -1) return;
+  // Die geführte Tour ist der Normalfall für ALLE Besucher.
+  // Nur der Spezial-Link index.html?voll=1 zeigt die Experten-Komplettansicht.
+  if(window.location.search.indexOf("voll=1") !== -1) return;
 
-  // Startseite ans 2-Minuten-Versprechen der Testseite angleichen
   var startKnopf = document.getElementById("btn-start");
   if(startKnopf) startKnopf.textContent = "Los geht’s – dauert nur 2 Minuten";
-  var startFuss = document.querySelector("#screen-start .footnote");
-  if(startFuss) startFuss.innerHTML = "Demonstrationsversion mit Beispieldaten. Keine echten Personen, keine echte Ortung.";
+  // Nur im Kampagnen-Modus (?test=1) die Investoren-Links ausblenden
+  if(window.location.search.indexOf("test=1") !== -1){
+    var startFuss = document.querySelector("#screen-start .footnote");
+    if(startFuss) startFuss.innerHTML = "Demonstrationsversion mit Beispieldaten. Keine echten Personen, keine echte Ortung.";
+  }
 
   var TALLY = "https://tally.so/r/RGeVB9";
   // {name}, {stufe}, {stufenname} werden beim Anzeigen durch die echten Werte ersetzt
